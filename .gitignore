@@ -1,0 +1,5 @@
+.cpcache/
+.dir-locals.el
+.nrepl-port
+.clj-kondo/
+.lsp/
