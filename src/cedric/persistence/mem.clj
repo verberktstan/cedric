@@ -20,4 +20,5 @@
     (-> mem
         (swap! create props item)
         meta
-        ::item)))
+        ::item))
+  (read-all [this] (c/combine @mem)))
