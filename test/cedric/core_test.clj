@@ -3,8 +3,7 @@
             [clojure.test :refer [deftest is testing]]))
 
 (deftest ->rows-test
-  (let [item   {:id 0 :attribute "value"}
-        ->rows (comp :item-rows #(sut/->rows % item))]
+  (let [->rows #(sut/->rows % {:id 0 :attribute "value"})]
     (testing "Returns a collection of rows with entity, attribute and value."
       (is (= [[[:id 0] :attribute "value"]]
              (->rows {:entity-attribute :id})))
