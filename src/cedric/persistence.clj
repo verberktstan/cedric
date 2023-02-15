@@ -1,5 +1,9 @@
 (ns cedric.persistence)
 
+;; TODO - Implement deletion of attributes for the update! functionality
+;; TODO - Implement destroy!
+;; TODO - Add CSV implementation of Persistence
+;; TODO - Add SQLite implementation of Persistence
 (defprotocol Persistence
   "A simple protocol to persist EAV rows"
   (create! [this props item] "Creates and saves item as EAV row. Returns the item.")

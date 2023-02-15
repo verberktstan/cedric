@@ -34,14 +34,18 @@
     {}
     rows))
 
-;; TODO - Make the entity-value generator (range in this case) a input parameter.
-(defn make-entity-generator [db]
-  (fn gen-entity* [entity-attribute]
-    (first
-      (into
-        []
-        (comp
-          (map (juxt (constantly entity-attribute) identity))
-          (drop-while db)
-          (take 1))
-        (range)))))
+(defn- take-next [entity-attribute db]
+  (comp
+    (map (juxt (constantly entity-attribute) identity))
+    (drop-while db)
+    (take 1)))
+
+(defn generate-entity
+  [{:keys [entity-attribute entity-value-generator]
+    :or   {entity-value-generator range}}
+   db]
+  (first
+    (into
+      []
+      (take-next entity-attribute db)
+      (entity-value-generator))))

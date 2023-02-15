@@ -4,14 +4,17 @@
             [clojure.data :as data]))
 
 (defn- items-with-entities [db]
-  (reduce-kv (fn [m entity item]
-               (assoc m entity (merge item (into {} [entity])))) nil db))
+  (reduce-kv
+    (fn [m entity item]
+      (assoc m entity (merge item (into {} [entity]))))
+    nil
+    db))
 
 (defn- upsert [rows {:keys [entity-attribute] :as props} item]
   (let [db                (c/combine rows)
         entity            (if-let [entity (find item entity-attribute)]
                             entity
-                            ((c/make-entity-generator db) entity-attribute)) ;; TODO - Refactor this
+                            (c/generate-entity props db))
         item-rows         (c/->rows props (merge item (into {} [entity])))
         [_ added overlap] (data/diff db (->> item-rows (map c/zip-eav) c/->map))] ;; TODO - Refactor zip-eav ->map
     (with-meta
