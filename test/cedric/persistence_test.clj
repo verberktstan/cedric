@@ -18,10 +18,23 @@
         (sut/create! db props item)
         (is (= (merge item {:id 1}) (sut/create! db props item)))))))
 
+(def ROWS [[[:id 0] :attribute1 "value1"]
+           [[:id 1] :attribute1 "value1"]
+           [[:id 1] :attribute2 "value2"]])
+
 (deftest read-all-test
   (doseq [init-fn constructors]
-    (let [rows [[[:id 0] :attribute1 "value1"]
-                [[:id 1] :attribute1 "value1"]
-                [[:id 1] :attribute2 "value2"]]
-          db   (init-fn rows)]
-      (is (= (cedric.core/combine rows) (sut/read-all db))))))
+    (let [db (init-fn ROWS)]
+      (is (= {[:id 0] {:id 0 :attribute1 "value1"}
+              [:id 1] {:id 1 :attribute1 "value1" :attribute2 "value2"}}
+             (sut/read-all db))))))
+
+(deftest update!-test
+  (doseq [init-fn constructors]
+    (let [db    (init-fn ROWS)
+          props {:entity-attribute :id}
+          item  {:id 0 :attribute1 "new-value"}]
+      (is (= {:id 0 :attribute1 "new-value"} (sut/update! db props item)))
+      (is (= {[:id 0] {:id 0 :attribute1 "new-value"}
+              [:id 1] {:id 1 :attribute1 "value1" :attribute2 "value2"}}
+             (sut/read-all db))))))

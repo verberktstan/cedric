@@ -9,14 +9,8 @@
              (->rows {:entity-attribute :id})))
       (is (= [[[:attribute "value"] :id 0]]
              (->rows {:entity-attribute :attribute}))))
-    (testing "evaluates :gen-entity and uses its result as entity when the
-              entity-attribute can't be found"
-      (is (= [[[:item/id 2311] :id 0]
-              [[:item/id 2311] :attribute "value"]]
-             (->rows {:entity-attribute :unknown
-                      :gen-entity       (constantly [:item/id 2311])}))))
-    (testing "throws an error when the entity can't be found nor generated"
-      (is (thrown? AssertionError (->rows {:entity-attribute :unknown}))))))
+    (testing "returns nil when entity can't be found" 
+      (is (nil? (->rows {:entity-attribute :unknown}))))))
 
 (deftest combine-test
   (let [rows [[[:id 0] :attribute1 "value1"]

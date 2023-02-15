@@ -15,9 +15,7 @@
     :or   {entity-attribute :id
            gen-entity       (constantly nil)}}
    item]
-  (let [entity (or (find item entity-attribute)
-                   (gen-entity entity-attribute))]
-    (assert (some? entity))
+  (when-let [entity (find item entity-attribute)]
     (->> (dissoc item entity-attribute)
          (map (comp zip-eav (juxt (constantly entity) key val)))
          (map (juxt ::entity ::attribute ::value)))))
