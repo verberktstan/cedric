@@ -1,7 +1,7 @@
 (ns cedric.core
   (:require [clojure.data :as data]))
 
-;; CEDRIC - your Companion for Event DRIven data persistence in Clojure
+;; CEDRIC - Clojure's Event Driven datapersistence Companion
 ;; Store items (maps) as rows in a EAV database. Backends implemented as in-memory db, csv file, and SQLite
 ;; Create, Read, Update & Delete/Destroy
 
@@ -9,23 +9,22 @@
 
 (defn ->rows
   "Returns EAV-rows for the item to be saved. I'ts entity is based of the
-  supplied entity-attribute. If that can't be found in the item, gen-entity is
-  evaluated to generate a new entity."
-  [{:keys [entity-attribute gen-entity]
-    :or   {entity-attribute :id
-           gen-entity       (constantly nil)}}
-   item]
+  supplied entity-attribute. When the entity can't be found in the item, returns nil."
+  [{:keys [entity-attribute]
+    :or   {entity-attribute :id}} item]
   (when-let [entity (find item entity-attribute)]
     (->> (dissoc item entity-attribute)
          (map (comp zip-eav (juxt (constantly entity) key val)))
          (map (juxt ::entity ::attribute ::value)))))
 
-(defn ->map [{::keys [entity attribute value] :as props}]
+;; TODO - Make this more readabe?
+(defn ->map [{::keys [entity attribute value]}]
   {entity
    (-> {}
        (into [entity])
        (into [[attribute value]]))})
 
+;; TODO - Add filtering (on entity?) of the rows before merging
 (defn combine [rows]
   (transduce
     (comp
