@@ -19,10 +19,18 @@
 (deftest combine-test
   (let [rows [[[:id 0] :attribute1 "value1"]
               [[:id 0] :attribute2 "value2"]
-              [[:id 1] :attribute3 "value3"]]]
-    (is (= {[:id 0] {:id 0 :attribute1 "value1" :attribute2 "value2"}
-            [:id 1] {:id 1 :attribute3 "value3"}}
-           (sut/combine rows)))))
+              [[:id 1] :attribute3 "value3"]
+              [[:user 3] :attribute4 "value4"]]]
+    (testing "combine returns a db map with all items"
+      (is (= {[:id 0]   {:id 0 :attribute1 "value1" :attribute2 "value2"}
+              [:id 1]   {:id 1 :attribute3 "value3"}
+              [:user 3] {:user 3 :attribute4 "value4"}}
+             (sut/combine rows))))
+    (testing "returns a db-map with only items filtered by entity"
+      (is (= {[:user 3] {:user 3 :attribute4 "value4"}}
+             (sut/combine {:entity-pred (comp #{:user} first)} rows)))
+      (is (= {[:id 1] {:id 1 :attribute3 "value3"}}
+             (sut/combine {:entity-pred (comp #{1} second)} rows))))))
 
 (deftest generate-entity-test
   (let [props     {:entity-attribute :id}

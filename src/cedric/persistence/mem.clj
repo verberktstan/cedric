@@ -11,7 +11,7 @@
     db))
 
 (defn- upsert [rows {:keys [entity-attribute] :as props} item]
-  (let [db                      (c/combine rows)
+  (let [db                      (c/combine (comp #{entity-attribute} first) rows)
         entity                  (if-let [entity (find item entity-attribute)]
                                   entity
                                   (c/generate-entity props db))

@@ -40,14 +40,19 @@
       (not deleted-attribute) (merge map-b))))
 
 ;; TODO - Add filtering (on entity?) of the rows before merging
-(defn combine [rows]
-  (transduce
-    (comp
-      (map zip-eav)
-      (map ->map))
-    (partial merge-with merge-items)
-    {}
-    rows))
+(defn combine
+  ([row] (combine nil row))
+  ([{:keys [entity-pred]
+     :or   {entity-pred identity}
+     :as   props} rows]
+   (transduce
+     (comp
+       (map zip-eav)
+       (filter (comp entity-pred ::entity))
+       (map ->map))
+     (partial merge-with merge-items)
+     {}
+     rows)))
 
 (defn- take-next [entity-attribute db]
   (comp
