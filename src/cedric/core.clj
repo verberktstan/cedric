@@ -17,13 +17,20 @@
          (map (comp zip-eav (juxt (constantly entity) key val (constantly (boolean deleted?)))))
          (map (juxt ::entity ::attribute ::value ::deleted)))))
 
+(defn entity->map
+  "Returns a map with the entity as part of it.
+  `(entity->map {:a :b} [:id 0]) => {:a :b :id 0}`"
+  ([entity] (entity->map nil entity))
+  ([m entity]
+   (into (or m {}) [entity])))
+
 ;; TODO - Make this more readabe?
 (defn ->map [{::keys [entity attribute value deleted]}]
   (if deleted
     {entity (with-meta {attribute value} {::deleted-attribute attribute})}
     {entity
      (-> {}
-         (into [entity])
+         (entity->map entity)
          (into [[attribute value]]))}))
 
 (defn- merge-items [map-a map-b]

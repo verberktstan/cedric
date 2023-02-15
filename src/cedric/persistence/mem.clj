@@ -6,7 +6,7 @@
 (defn- items-with-entities [db]
   (reduce-kv
     (fn [m entity item]
-      (assoc m entity (merge item (into {} [entity]))))
+      (assoc m entity (merge item (c/entity->map entity))))
     nil
     db))
 
@@ -15,15 +15,17 @@
         entity                  (if-let [entity (find item entity-attribute)]
                                   entity
                                   (c/generate-entity props db))
-        the-item                (merge item (into {} [entity]))
-        [removed added overlap] (data/diff (get db entity) the-item)
-        added-rows              (c/->rows props (into (or added {}) [entity]))
-        removed-rows            (c/->rows (assoc props :deleted? true) (into (or removed {}) [entity]))]
+        [removed added overlap] (data/diff
+                                  (get db entity)
+                                  (merge item (c/entity->map entity)))
+        added-rows              (c/->rows props (c/entity->map added entity))
+        removed-props           (assoc props :deleted? true)
+        removed-rows            (c/->rows removed-props (c/entity->map removed entity))]
     (with-meta
       (as-> rows r
         (reduce conj r removed-rows)
         (reduce conj r added-rows))
-      {::item (merge-with merge added overlap)})))
+      {::item (merge-with merge overlap added)})))
 
 (defrecord Mem [mem]
   Persistence

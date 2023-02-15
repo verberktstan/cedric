@@ -12,6 +12,10 @@
     (testing "returns nil when entity can't be found" 
       (is (nil? (->rows {:entity-attribute :unknown}))))))
 
+(deftest entity->map-test
+  (is (= {:id 0} (sut/entity->map [:id 0])))
+  (is (= {:a :b :id 0} (sut/entity->map {:a :b} [:id 0]))))
+
 (deftest combine-test
   (let [rows [[[:id 0] :attribute1 "value1"]
               [[:id 0] :attribute2 "value2"]

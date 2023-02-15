@@ -1,6 +1,5 @@
 (ns cedric.persistence)
 
-;; TODO - Implement deletion of attributes for the update! functionality
 ;; TODO - Implement destroy!
 ;; TODO - Add CSV implementation of Persistence
 ;; TODO - Add SQLite implementation of Persistence
