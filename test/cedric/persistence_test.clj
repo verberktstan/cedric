@@ -18,9 +18,9 @@
         (sut/create! db props item)
         (is (= (merge item {:id 1}) (sut/create! db props item)))))))
 
-(def ROWS [[[:id 0] :attribute1 "value1"]
-           [[:id 1] :attribute1 "value1"]
-           [[:id 1] :attribute2 "value2"]])
+(def ROWS [[[:id 0] :attribute1 "value1" false]
+           [[:id 1] :attribute1 "value1" false]
+           [[:id 1] :attribute2 "value2" false]])
 
 (deftest read-all-test
   (doseq [init-fn constructors]
@@ -33,8 +33,13 @@
   (doseq [init-fn constructors]
     (let [db    (init-fn ROWS)
           props {:entity-attribute :id}
-          item  {:id 0 :attribute1 "new-value"}]
+          item  {:id 0 :attribute1 "new-value"}
+          item1 {:id 1 :attribute1 "value1"}]
       (is (= {:id 0 :attribute1 "new-value"} (sut/update! db props item)))
       (is (= {[:id 0] {:id 0 :attribute1 "new-value"}
               [:id 1] {:id 1 :attribute1 "value1" :attribute2 "value2"}}
-             (sut/read-all db))))))
+             (sut/read-all db)))
+      (is (= item1 (sut/update! db props item1)))
+      (is (=  {[:id 0] {:id 0 :attribute1 "new-value"}
+               [:id 1] {:id 1 :attribute1 "value1"}}
+              (sut/read-all db))))))

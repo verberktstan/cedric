@@ -5,9 +5,9 @@
 (deftest ->rows-test
   (let [->rows #(sut/->rows % {:id 0 :attribute "value"})]
     (testing "Returns a collection of rows with entity, attribute and value."
-      (is (= [[[:id 0] :attribute "value"]]
+      (is (= [[[:id 0] :attribute "value" false]]
              (->rows {:entity-attribute :id})))
-      (is (= [[[:attribute "value"] :id 0]]
+      (is (= [[[:attribute "value"] :id 0 false]]
              (->rows {:entity-attribute :attribute}))))
     (testing "returns nil when entity can't be found" 
       (is (nil? (->rows {:entity-attribute :unknown}))))))

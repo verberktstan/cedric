@@ -11,15 +11,19 @@
     db))
 
 (defn- upsert [rows {:keys [entity-attribute] :as props} item]
-  (let [db                (c/combine rows)
-        entity            (if-let [entity (find item entity-attribute)]
-                            entity
-                            (c/generate-entity props db))
-        item-rows         (c/->rows props (merge item (into {} [entity])))
-        [_ added overlap] (data/diff db (->> item-rows (map c/zip-eav) c/->map))] ;; TODO - Refactor zip-eav ->map
+  (let [db                      (c/combine rows)
+        entity                  (if-let [entity (find item entity-attribute)]
+                                  entity
+                                  (c/generate-entity props db))
+        the-item                (merge item (into {} [entity]))
+        [removed added overlap] (data/diff (get db entity) the-item)
+        added-rows              (c/->rows props (into (or added {}) [entity]))
+        removed-rows            (c/->rows (assoc props :deleted? true) (into (or removed {}) [entity]))]
     (with-meta
-      (reduce conj rows (mapcat (partial c/->rows props) (vals (items-with-entities added))))
-      {::item (-> (merge-with merge added overlap) (get entity))})))
+      (as-> rows r
+        (reduce conj r removed-rows)
+        (reduce conj r added-rows))
+      {::item (merge-with merge added overlap)})))
 
 (defrecord Mem [mem]
   Persistence
