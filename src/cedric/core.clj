@@ -14,7 +14,7 @@
     :or   {entity-attribute :id}} item]
   (when-let [entity (find item entity-attribute)]
     (->> (dissoc item entity-attribute)
-         (map (comp zip-eav (juxt (constantly entity) key val (constantly (boolean deleted?)))))
+         (map (comp zip-eav (juxt (constantly entity) key val (constantly deleted?))))
          (map (juxt ::entity ::attribute ::value ::deleted)))))
 
 (defn entity->map
@@ -25,19 +25,29 @@
    (into (or m {}) [entity])))
 
 ;; TODO - Make this more readable?
+;; TODO - Make deleted and destroyed work the same way, possibly without metadata?
 (defn ->map [{::keys [entity attribute value deleted]}]
-  (if deleted
+  (cond
+    (#{:destroy!} deleted)
+    (with-meta {} {:destroyed-entity entity})
+    deleted
     {entity (with-meta {attribute value} {::deleted-attribute attribute})}
+    :else
     {entity
      (-> {}
          (entity->map entity)
          (into [[attribute value]]))}))
 
-(defn- merge-items [map-a map-b]
+(defn- merge-item [map-a map-b]
   (let [{::keys [deleted-attribute]} (meta map-b)]
     (cond-> map-a
       deleted-attribute       (dissoc deleted-attribute)
       (not deleted-attribute) (merge map-b))))
+
+(defn merge-items [& [item-a item-b]]
+  (let [{:keys [destroyed-entity]} (meta item-b)]
+    (cond-> (merge-with merge-item item-a item-b)
+      destroyed-entity (dissoc destroyed-entity))))
 
 (defn combine
   ([row] (combine nil row))
@@ -48,8 +58,11 @@
      (comp
        (map zip-eav)
        (filter (comp entity-pred ::entity))
+       ;; Catch :destroy in ->map
        (map ->map))
-     (partial merge-with merge-items)
+     ;; Instead of merge-with consume :destroy there.
+     merge-items 
+     ;; (partial merge-with merge-item)
      {}
      rows)))
 

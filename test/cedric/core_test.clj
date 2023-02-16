@@ -5,9 +5,9 @@
 (deftest ->rows-test
   (let [->rows #(sut/->rows % {:id 0 :attribute "value"})]
     (testing "Returns a collection of rows with entity, attribute and value."
-      (is (= [[[:id 0] :attribute "value" false]]
+      (is (= [[[:id 0] :attribute "value" nil]]
              (->rows {:entity-attribute :id})))
-      (is (= [[[:attribute "value"] :id 0 false]]
+      (is (= [[[:attribute "value"] :id 0 nil]]
              (->rows {:entity-attribute :attribute}))))
     (testing "returns nil when entity can't be found" 
       (is (nil? (->rows {:entity-attribute :unknown}))))))
@@ -16,26 +16,37 @@
   (is (= {:id 0} (sut/entity->map [:id 0])))
   (is (= {:a :b :id 0} (sut/entity->map {:a :b} [:id 0]))))
 
+(deftest ->map-test
+  (is (= {:destroyed-entity [:id 0]}
+         (-> (sut/->map {::sut/entity [:id 0] ::sut/attribute :a ::sut/value "v" ::sut/deleted :destroy!}) meta))))
+
+(deftest merge-items-test
+  (is (= {[:id 0] {:attribute1 "value1"}}
+         (sut/merge-items {[:id 0] {:attribute1 "value1"}}
+                          (with-meta
+                            {[:id 1] {:attribute2 "value2"}}
+                            {:destroyed-entity [:id 1]})))))
+
 (deftest combine-test
-  (let [rows [[[:id 0] :attribute1 "value1" false]
-              [[:id 0] :attribute2 "value2" false]
-              [[:id 1] :attribute3 "value3" false]
-              [[:user 3] :attribute4 "value4" false]]]
-    (testing "combine returns a db map with all items"
-      (is (= {[:id 0]   {:id 0 :attribute1 "value1" :attribute2 "value2"}
-              [:id 1]   {:id 1 :attribute3 "value3"}
-              [:user 3] {:user 3 :attribute4 "value4"}}
-             (sut/combine rows))))
-    (testing "returns a db-map with only items filtered by entity"
-      (is (= {[:user 3] {:user 3 :attribute4 "value4"}}
-             (sut/combine {:entity-pred (comp #{:user} first)} rows)))
-      (is (= {[:id 1] {:id 1 :attribute3 "value3"}}
-             (sut/combine {:entity-pred (comp #{1} second)} rows))))
-    (testing "deletes attributes where deleted column is true"
-      (is (= {[:id 0]   {:id 0 :attribute2 "value2"}
-              [:id 1]   {:id 1 :attribute3 "value3"}
-              [:user 3] {:user 3 :attribute4 "value4"}}
-             (sut/combine (conj rows [[:id 0] :attribute1 "value1" true])))))))
+(let [rows [[[:id 0] :attribute1 "value1" false]
+            [[:id 0] :attribute2 "value2" false]
+            [[:id 1] :attribute3 "value3" false]
+            [[:user 3] :attribute4 "value4" false]]]
+  (testing "combine returns a db map with all items"
+    (is (= {[:id 0]   {:id 0 :attribute1 "value1" :attribute2 "value2"}
+            [:id 1]   {:id 1 :attribute3 "value3"}
+            [:user 3] {:user 3 :attribute4 "value4"}}
+           (sut/combine rows))))
+  (testing "returns a db-map with only items filtered by entity"
+    (is (= {[:user 3] {:user 3 :attribute4 "value4"}}
+           (sut/combine {:entity-pred (comp #{:user} first)} rows)))
+    (is (= {[:id 1] {:id 1 :attribute3 "value3"}}
+           (sut/combine {:entity-pred (comp #{1} second)} rows))))
+  (testing "deletes attributes where deleted column is true"
+    (is (= {[:id 0]   {:id 0 :attribute2 "value2"}
+            [:id 1]   {:id 1 :attribute3 "value3"}
+            [:user 3] {:user 3 :attribute4 "value4"}}
+           (sut/combine (conj rows [[:id 0] :attribute1 "value1" true])))))))
 
 (deftest generate-entity-test
 (let [props     {:entity-attribute :id}

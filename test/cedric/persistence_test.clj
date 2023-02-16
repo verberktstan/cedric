@@ -43,3 +43,12 @@
       (is (=  {[:id 0] {:id 0 :attribute1 "new-value"}
                [:id 1] {:id 1 :attribute1 "value1"}}
               (sut/read-all db))))))
+
+(deftest destroy!-test
+  (doseq [init-fn constructors]
+    (let [db    (init-fn ROWS)
+          props {:entity-attribute :id}
+          item  {:id 1}]
+      (is (= item (sut/destroy! db props item)))
+      (is (= {[:id 0] {:id 0 :attribute1 "value1"}}
+             (sut/read-all db))))))
