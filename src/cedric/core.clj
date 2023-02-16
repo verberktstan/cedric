@@ -24,19 +24,14 @@
   ([m entity]
    (into (or m {}) [entity])))
 
-;; TODO - Make this more readable?
+;; TODO - Refactor into multiple namespaces; row / item / delete / destroy
 ;; TODO - Make deleted and destroyed work the same way, possibly without metadata?
 (defn ->map [{::keys [entity attribute value deleted]}]
-  (cond
-    (#{:destroy!} deleted)
-    (with-meta {} {:destroyed-entity entity})
-    deleted
-    {entity (with-meta {attribute value} {::deleted-attribute attribute})}
-    :else
-    {entity
-     (-> {}
-         (entity->map entity)
-         (into [[attribute value]]))}))
+  (let [av-map {attribute value}]
+    (cond
+      (#{:destroy!} deleted) (with-meta {} {:destroyed-entity entity})
+      deleted                {entity (with-meta av-map {::deleted-attribute attribute})}
+      :else                  {entity (entity->map av-map entity)})))
 
 (defn- merge-item [map-a map-b]
   (let [{::keys [deleted-attribute]} (meta map-b)]
@@ -61,7 +56,7 @@
        ;; Catch :destroy in ->map
        (map ->map))
      ;; Instead of merge-with consume :destroy there.
-     merge-items 
+     merge-items
      ;; (partial merge-with merge-item)
      {}
      rows)))
