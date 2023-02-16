@@ -22,10 +22,13 @@
 
 (deftest merge-items-test
   (is (= {[:id 0] {:attribute1 "value1"}}
-         (sut/merge-items {[:id 0] {:attribute1 "value1"}}
-                          (with-meta
-                            {[:id 1] {:attribute2 "value2"}}
-                            {:destroyed-entity [:id 1]})))))
+         (#'sut/merge-items {[:id 0] {:attribute1 "value1"}}
+                            (with-meta
+                              {[:id 1] {:attribute2 "value2"}}
+                              {:destroyed-entity [:id 1]}))))
+  (is (= {[:id 0] {:id 0 :attribute1 "value1"}}
+         (#'sut/merge-items {[:id 0] {:id 0}} {[:id 0] {:attribute1 "value1"}})))
+  (is (= nil (#'sut/merge-items nil nil))))
 
 (deftest combine-test
 (let [rows [[[:id 0] :attribute1 "value1" false]

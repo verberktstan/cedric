@@ -5,7 +5,7 @@
 ;; Store items (maps) as rows in a EAV database. Backends implemented as in-memory db, csv file, and SQLite
 ;; Create, Read, Update & Delete/Destroy
 
-(def zip-eav (partial zipmap [::entity ::attribute ::value ::deleted]))
+(def ^:private zip-eav (partial zipmap [::entity ::attribute ::value ::deleted]))
 
 (defn ->rows
   "Returns EAV-rows for the item to be saved. I'ts entity is based of the
@@ -39,7 +39,7 @@
       deleted-attribute       (dissoc deleted-attribute)
       (not deleted-attribute) (merge map-b))))
 
-(defn merge-items [& [item-a item-b]]
+(defn- merge-items [& [item-a item-b]]
   (let [{:keys [destroyed-entity]} (meta item-b)]
     (cond-> (merge-with merge-item item-a item-b)
       destroyed-entity (dissoc destroyed-entity))))
@@ -53,11 +53,8 @@
      (comp
        (map zip-eav)
        (filter (comp entity-pred ::entity))
-       ;; Catch :destroy in ->map
        (map ->map))
-     ;; Instead of merge-with consume :destroy there.
      merge-items
-     ;; (partial merge-with merge-item)
      {}
      rows)))
 
