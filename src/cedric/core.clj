@@ -24,7 +24,7 @@
   ([m entity]
    (into (or m {}) [entity])))
 
-;; TODO - Make this more readabe?
+;; TODO - Make this more readable?
 (defn ->map [{::keys [entity attribute value deleted]}]
   (if deleted
     {entity (with-meta {attribute value} {::deleted-attribute attribute})}
@@ -39,7 +39,6 @@
       deleted-attribute       (dissoc deleted-attribute)
       (not deleted-attribute) (merge map-b))))
 
-;; TODO - Add filtering (on entity?) of the rows before merging
 (defn combine
   ([row] (combine nil row))
   ([{:keys [entity-pred]
