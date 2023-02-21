@@ -18,9 +18,9 @@
         (sut/create! db props item)
         (is (= (merge item {:id 1}) (sut/create! db props item)))))))
 
-(def ROWS [[[:id 0] :attribute1 "value1" false]
-           [[:id 1] :attribute1 "value1" false]
-           [[:id 1] :attribute2 "value2" false]])
+(def ROWS [[[:id 0] :attribute1 "value1" nil]
+           [[:id 1] :attribute1 "value1" nil]
+           [[:id 1] :attribute2 "value2" nil]])
 
 (deftest read-all-test
   (doseq [init-fn constructors]

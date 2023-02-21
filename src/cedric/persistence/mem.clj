@@ -34,6 +34,7 @@
           (reduce conj r added-rows))
         {::item (merge-with merge overlap added)}))))
 
+;; TODO - Compose swap!, meta, ::item
 (defrecord Mem [mem]
   Persistence
   (create! [this {:keys [entity-attribute] :as props} item]

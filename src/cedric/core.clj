@@ -5,7 +5,7 @@
 ;; Store items (maps) as rows in a EAV database. Backends implemented as in-memory db, csv file, and SQLite
 ;; Create, Read, Update & Delete/Destroy
 
-(def ^:private zip-eav (partial zipmap [::entity ::attribute ::value ::deleted]))
+(def ^:private zip-eav (partial zipmap [::entity ::attribute ::value ::delete-or-destroy]))
 
 (defn ->rows
   "Returns EAV-rows for the item to be saved. I'ts entity is based of the
@@ -13,9 +13,10 @@
   [{:keys [entity-attribute deleted?]
     :or   {entity-attribute :id}} item]
   (when-let [entity (find item entity-attribute)]
-    (->> (dissoc item entity-attribute)
-         (map (comp zip-eav (juxt (constantly entity) key val (constantly deleted?))))
-         (map (juxt ::entity ::attribute ::value ::deleted)))))
+    (let [delete (when deleted? :delete!)]
+      (->> (dissoc item entity-attribute)
+           (map (comp zip-eav (juxt (constantly entity) key val (constantly delete))))
+           (map (juxt ::entity ::attribute ::value ::delete-or-destroy))))))
 
 (defn entity->map
   "Returns a map with the entity as part of it.
@@ -26,12 +27,14 @@
 
 ;; TODO - Refactor into multiple namespaces; row / item / delete / destroy
 ;; TODO - Make deleted and destroyed work the same way, possibly without metadata?
-(defn ->map [{::keys [entity attribute value deleted]}]
-  (let [av-map {attribute value}]
+(defn ->map [{::keys [entity attribute value delete-or-destroy]}]
+  (let [av-map   {attribute value}
+        delete?  (-> delete-or-destroy #{:delete!})
+        destroy? (-> delete-or-destroy #{:destroy!})]
     (cond
-      (#{:destroy!} deleted) (with-meta {} {:destroyed-entity entity})
-      deleted                {entity (with-meta av-map {::deleted-attribute attribute})}
-      :else                  {entity (entity->map av-map entity)})))
+      destroy? (with-meta {} {:destroyed-entity entity})
+      delete?  {entity (with-meta av-map {::deleted-attribute attribute})}
+      :else    {entity (entity->map av-map entity)})))
 
 (defn- merge-item [map-a map-b]
   (let [{::keys [deleted-attribute]} (meta map-b)]
