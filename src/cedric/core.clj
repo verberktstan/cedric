@@ -26,15 +26,12 @@
    (into (or m {}) [entity])))
 
 ;; TODO - Refactor into multiple namespaces; row / item / delete / destroy
-;; TODO - Make deleted and destroyed work the same way, possibly without metadata?
 (defn ->map [{::keys [entity attribute value delete-or-destroy]}]
-  (let [av-map   {attribute value}
-        delete?  (-> delete-or-destroy #{:delete!})
-        destroy? (-> delete-or-destroy #{:destroy!})]
-    (cond
-      destroy? (with-meta {} {:destroyed-entity entity})
-      delete?  {entity (with-meta av-map {::deleted-attribute attribute})}
-      :else    {entity (entity->map av-map entity)})))
+  (let [av-map {attribute value}]
+    (case delete-or-destroy
+      :destroy! (with-meta {} {::destroyed-entity entity})
+      :delete!  {entity (with-meta av-map {::deleted-attribute attribute})}
+      {entity (entity->map av-map entity)})))
 
 (defn- merge-item [map-a map-b]
   (let [{::keys [deleted-attribute]} (meta map-b)]
@@ -43,7 +40,7 @@
       (not deleted-attribute) (merge map-b))))
 
 (defn- merge-items [& [item-a item-b]]
-  (let [{:keys [destroyed-entity]} (meta item-b)]
+  (let [{::keys [destroyed-entity]} (meta item-b)]
     (cond-> (merge-with merge-item item-a item-b)
       destroyed-entity (dissoc destroyed-entity))))
 

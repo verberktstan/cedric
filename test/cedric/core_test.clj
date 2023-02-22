@@ -17,7 +17,7 @@
   (is (= {:a :b :id 0} (sut/entity->map {:a :b} [:id 0]))))
 
 (deftest ->map-test
-  (is (= {:destroyed-entity [:id 0]}
+  (is (= {::sut/destroyed-entity [:id 0]}
          (-> (sut/->map {::sut/entity [:id 0] ::sut/attribute :a ::sut/value "v" ::sut/delete-or-destroy :destroy!}) meta))))
 
 (deftest merge-items-test
@@ -25,7 +25,7 @@
          (#'sut/merge-items {[:id 0] {:attribute1 "value1"}}
                             (with-meta
                               {[:id 1] {:attribute2 "value2"}}
-                              {:destroyed-entity [:id 1]}))))
+                              {::sut/destroyed-entity [:id 1]}))))
   (is (= {[:id 0] {:id 0 :attribute1 "value1"}}
          (#'sut/merge-items {[:id 0] {:id 0}} {[:id 0] {:attribute1 "value1"}})))
   (is (= nil (#'sut/merge-items nil nil))))

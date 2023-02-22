@@ -34,22 +34,15 @@
           (reduce conj r added-rows))
         {::item (merge-with merge overlap added)}))))
 
-;; TODO - Compose swap!, meta, ::item
+;; Swap and return the ::item from the metadata
+(def ^:private swap-item! (comp ::item meta swap!))
+
 (defrecord Mem [mem]
   Persistence
   (create! [this {:keys [entity-attribute] :as props} item]
-    (-> mem
-        (swap! upsert props (dissoc item entity-attribute))
-        meta
-        ::item))
+    (swap-item! mem upsert props (dissoc item entity-attribute)))
   (read-all [this] (c/combine @mem))
   (update! [this props item]
-    (-> mem
-        (swap! upsert props item)
-        meta
-        ::item))
+    (swap-item! mem upsert props item))
   (destroy! [this props item]
-    (-> mem
-        (swap! upsert (assoc props ::destroy? true) item)
-        meta
-        ::item)))
+    (swap-item! mem upsert (assoc props ::destroy? true) item)))
