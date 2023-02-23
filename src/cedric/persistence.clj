@@ -5,6 +5,6 @@
 ;; TODO - Add SQLite implementation of Persistence
 (defprotocol Persistence
   "A simple protocol to persist EAV rows"
-  (read-all [this] "Returns all items in the database.")
+  (query [this props] "Queries items from the database.")
   (upsert! [this props item] "Upsert changes to the item. Returns the item.")
   (destroy! [this props item]))

@@ -39,7 +39,9 @@
 
 (defrecord Mem [mem]
   Persistence
-  (read-all [this] (c/combine @mem))
+  (query [this props]
+    (when (= :all props)
+      (c/combine @mem)))
   (upsert! [this props item]
     (swap-item! mem upsert props item))
   (destroy! [this props item]

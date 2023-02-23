@@ -12,12 +12,12 @@
            [[:id 1] :attribute1 "value1" nil]
            [[:id 1] :attribute2 "value2" nil]])
 
-(deftest read-all-test
+(deftest query-test
   (doseq [init-fn constructors]
     (let [db (init-fn ROWS)]
       (is (= {[:id 0] {:id 0 :attribute1 "value1"}
               [:id 1] {:id 1 :attribute1 "value1" :attribute2 "value2"}}
-             (sut/read-all db))))))
+             (sut/query db :all))))))
 
 (deftest upsert!-test
   (doseq [init-fn constructors]
@@ -29,21 +29,21 @@
           (let [db (init-fn ROWS)]
             (is (= item2 (sut/upsert! db props base-item)))
             (is (= (merge base-item {:id 2})
-                   (get (sut/read-all db) [:id 2])))))
+                   (get (sut/query db :all) [:id 2])))))
 
         (testing "returns and saves the updated attributes of an item"
           (let [db   (init-fn ROWS)
                 item {:id 0 :attribute1 "new-value"}]
             (is (= item (sut/upsert! db props item)))
             (is (= {:id 0 :attribute1 "new-value"}
-                   (get (sut/read-all db) [:id 0])))))
+                   (get (sut/query db :all) [:id 0])))))
 
         (testing "returns and saves the deleted attributes of an item"
           (let [db    (init-fn ROWS)
                 item1 {:id 1 :attribute1 "value1"}]
             (is (= item1 (sut/upsert! db props item1)))
             (is (= {:id 1 :attribute1 "value1"}
-                   (get (sut/read-all db) [:id 1])))))))))
+                   (get (sut/query db :all) [:id 1])))))))))
 
 (deftest destroy!-test
   (doseq [init-fn constructors]
@@ -52,4 +52,4 @@
           item  {:id 1}]
       (is (= item (sut/destroy! db props item)))
       (is (= {[:id 0] {:id 0 :attribute1 "value1"}}
-             (sut/read-all db))))))
+             (sut/query db :all))))))
