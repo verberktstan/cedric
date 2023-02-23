@@ -39,10 +39,8 @@
 
 (defrecord Mem [mem]
   Persistence
-  (create! [this {:keys [entity-attribute] :as props} item]
-    (swap-item! mem upsert props (dissoc item entity-attribute)))
   (read-all [this] (c/combine @mem))
-  (update! [this props item]
+  (upsert! [this props item]
     (swap-item! mem upsert props item))
   (destroy! [this props item]
     (swap-item! mem upsert (assoc props ::destroy? true) item)))

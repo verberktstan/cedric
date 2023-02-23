@@ -1,5 +1,5 @@
 (ns cedric.persistence-test
-  (:require [clojure.test :refer [deftest is]]
+  (:require [clojure.test :refer [deftest is testing]]
             [cedric.persistence :as sut]
             [cedric.persistence.mem :as mem])
   (:import (cedric.persistence.mem Mem)))
@@ -7,16 +7,6 @@
 ;; Test all implementations, only the constructor is different
 (def make-mem  (fn [& [rows]] (Mem. (atom rows))))
 (def constructors [make-mem])
-
-(deftest create!-test
-  (let [props {:entity-attribute :id}
-        item  {:attribute "value"}]
-    (doseq [init-fn constructors]
-      (let [db (init-fn)]
-        (is (= (merge item {:id 0}) (sut/create! db props item))))
-      (let [db (init-fn)]
-        (sut/create! db props item)
-        (is (= (merge item {:id 1}) (sut/create! db props item)))))))
 
 (def ROWS [[[:id 0] :attribute1 "value1" nil]
            [[:id 1] :attribute1 "value1" nil]
@@ -29,20 +19,31 @@
               [:id 1] {:id 1 :attribute1 "value1" :attribute2 "value2"}}
              (sut/read-all db))))))
 
-(deftest update!-test
+(deftest upsert!-test
   (doseq [init-fn constructors]
-    (let [db    (init-fn ROWS)
-          props {:entity-attribute :id}
-          item  {:id 0 :attribute1 "new-value"}
-          item1 {:id 1 :attribute1 "value1"}]
-      (is (= {:id 0 :attribute1 "new-value"} (sut/update! db props item)))
-      (is (= {[:id 0] {:id 0 :attribute1 "new-value"}
-              [:id 1] {:id 1 :attribute1 "value1" :attribute2 "value2"}}
-             (sut/read-all db)))
-      (is (= item1 (sut/update! db props item1)))
-      (is (=  {[:id 0] {:id 0 :attribute1 "new-value"}
-               [:id 1] {:id 1 :attribute1 "value1"}}
-              (sut/read-all db))))))
+    (testing "upsert!"
+      (let [props     {:entity-attribute :id}
+            base-item {:attribute "value"}
+            item2     (merge base-item {:id 2})]
+        (testing "returns and saves a new item with a new entity attribute associated"
+          (let [db (init-fn ROWS)]
+            (is (= item2 (sut/upsert! db props base-item)))
+            (is (= (merge base-item {:id 2})
+                   (get (sut/read-all db) [:id 2])))))
+
+        (testing "returns and saves the updated attributes of an item"
+          (let [db   (init-fn ROWS)
+                item {:id 0 :attribute1 "new-value"}]
+            (is (= item (sut/upsert! db props item)))
+            (is (= {:id 0 :attribute1 "new-value"}
+                   (get (sut/read-all db) [:id 0])))))
+
+        (testing "returns and saves the deleted attributes of an item"
+          (let [db    (init-fn ROWS)
+                item1 {:id 1 :attribute1 "value1"}]
+            (is (= item1 (sut/upsert! db props item1)))
+            (is (= {:id 1 :attribute1 "value1"}
+                   (get (sut/read-all db) [:id 1])))))))))
 
 (deftest destroy!-test
   (doseq [init-fn constructors]
