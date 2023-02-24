@@ -10,9 +10,9 @@
 (defn ->rows
   "Returns EAV-rows for the item to be saved. I'ts entity is based of the
   supplied entity-attribute. When the entity can't be found in the item, returns nil."
-  [{:keys [entity-attribute deleted?]
-    :or   {entity-attribute :id}} item]
-  (when-let [entity (find item entity-attribute)]
+  [{:keys [entity-attribute find-entity deleted?]} item]
+  (when-let [entity (or (find item entity-attribute)
+                        (when find-entity (find-entity item)))]
     (let [delete (when deleted? :delete!)]
       (->> (dissoc item entity-attribute)
            (map (comp zip-eav (juxt (constantly entity) key val (constantly delete))))

@@ -8,7 +8,10 @@
       (is (= [[[:id 0] :attribute "value" nil]]
              (->rows {:entity-attribute :id})))
       (is (= [[[:attribute "value"] :id 0 nil]]
-             (->rows {:entity-attribute :attribute}))))
+             (->rows {:entity-attribute :attribute})))
+      (is (= [[[:attribute "value"] :id 0 nil]
+              [[:attribute "value"] :attribute "value" nil]]
+             (->rows {:find-entity #(find % :attribute)}))))
     (testing "returns nil when entity can't be found" 
       (is (nil? (->rows {:entity-attribute :unknown}))))))
 
