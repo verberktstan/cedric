@@ -1,11 +1,18 @@
 (ns cedric.core
   (:require [clojure.data :as data]))
 
-;; CEDRIC - Clojure's Event Driven datapersistence Companion
-;; Store items (maps) as rows in a EAV database. Backends implemented as in-memory db, csv file, and SQLite
-;; Create, Read, Update & Delete/Destroy
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; CEDRIC - Companion for Event DRIven datapersistence in Clojure
+;; Store associatve items (maps, vectors, records) as rows in a EAV database.
+;; Backends implemented as in-memory db, (TODO - csv, edn and SQLite)
+;; Upsert (create, update & delete), Read & Destroy functionality
 
 (def ^:private zip-eav (partial zipmap [::entity ::attribute ::value ::delete-or-destroy]))
+
+(defn- ->eav [entity delete]
+  (comp zip-eav (juxt (constantly entity) key val (constantly delete))))
+
+(def ^:private ->row (juxt ::entity ::attribute ::value ::delete-or-destroy))
 
 (defn ->rows
   "Returns EAV-rows for the item to be saved. I'ts entity is based of the
@@ -15,8 +22,8 @@
                         (when find-entity (find-entity item)))]
     (let [delete (when deleted? :delete!)]
       (->> (dissoc item entity-attribute)
-           (map (comp zip-eav (juxt (constantly entity) key val (constantly delete))))
-           (map (juxt ::entity ::attribute ::value ::delete-or-destroy))))))
+           (map (->eav entity delete))
+           (map ->row)))))
 
 (defn entity->map
   "Returns a map with the entity as part of it.
