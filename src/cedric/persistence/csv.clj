@@ -19,16 +19,6 @@
     (csv/write-csv writer (map (partial map pr-str) rows) :separator \;)))
 
 ;; TODO - This is shared with mem implementation, DRY it!
-(defn- build-entity-pred
-  "Returns a function that checks the ea? and ev? predicates for it's input.
-  Presumes that v is a vector of 2 elements, the first being the entity attribute,
-  the second being the entity value."
-  [{:keys [ea? ev?]}]
-  (fn entity-pred [v]
-    (every?
-      #(% v)
-      (keep identity [(when ea? (comp ea? first))
-                      (when ev? (comp ev? second))]))))
 
 (defn- upsert* [filename {:keys  [entity-attribute]
                           ::keys [destroy?]
@@ -57,7 +47,7 @@
     ;; TODO - DRY the shared code with mem implementation
     (if (= :all props)
       (c/combine (read-rows filename))
-      (c/combine {:entity-pred (build-entity-pred props)} (read-rows filename))))
+      (c/combine {:entity-pred (c/build-entity-pred props)} (read-rows filename))))
   (upsert! [this props item]
     (upsert* filename props item))
   (destroy! [this props item]
