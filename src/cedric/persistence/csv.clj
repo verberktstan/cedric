@@ -18,8 +18,6 @@
   (with-open [writer (io/writer filename :append true)]
     (csv/write-csv writer (map (partial map pr-str) rows) :separator \;)))
 
-;; TODO - This is shared with mem implementation, DRY it!
-
 (defn- upsert* [filename {:keys  [entity-attribute]
                           ::keys [destroy?]
                           :as    props} item]

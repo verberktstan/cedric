@@ -56,12 +56,13 @@
   "Returns a function that checks the ea? and ev? predicates for it's input.
   Presumes that v is a vector of 2 elements, the first being the entity attribute,
   the second being the entity value."
-  [{:keys [ea? ev?]}]
+  [{:keys [ea? ev? e?]}]
   (fn entity-pred [v]
     (every?
       #(% v)
       (keep identity [(when ea? (comp ea? first))
-                      (when ev? (comp ev? second))]))))
+                      (when ev? (comp ev? second))
+                      e?]))))
 
 (defn combine
   ([row] (combine nil row))
