@@ -24,12 +24,15 @@
   (if destroy?
     (let [entity (find item entity-attribute)]
       (write-rows! filename [[entity (first entity) (second entity) :destroy!]]))
-    ;; TODO - Fix this combine predicate
     ;; TODO - DRY this overlap with mem implementation
-    (let [db                      (c/combine (read-rows filename))
-          entity                  (if-let [entity (find item entity-attribute)]
-                                    entity
-                                    (c/generate-entity props db))
+    (let [found-entity            (find item entity-attribute)
+          db                      (c/combine
+                                    (if found-entity
+                                      {:e? #{found-entity}}
+                                      {:ea? #{entity-attribute}})
+                                    (read-rows filename))
+          entity                  (or found-entity
+                                      (c/generate-entity props db))
           [removed added overlap] (data/diff
                                     (get db entity)
                                     (merge item (c/entity->map entity)))
@@ -45,7 +48,7 @@
     ;; TODO - DRY the shared code with mem implementation
     (if (= :all props)
       (c/combine (read-rows filename))
-      (c/combine {:entity-pred (c/build-entity-pred props)} (read-rows filename))))
+      (c/combine props (read-rows filename))))
   (upsert! [this props item]
     (upsert* filename props item))
   (destroy! [this props item]

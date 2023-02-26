@@ -33,7 +33,7 @@
 (def ROWS [[[:id 0] :attribute1 "value1" nil]
            [[:id 1] :attribute1 "value1" nil]
            [[:id 1] :attribute2 "value2" nil]])
-
+;; TODO - Improve per test-db with something like with-test-db
 (deftest query-test
   (doseq [init-fn constructors]
     (let [db    (init-fn ROWS)

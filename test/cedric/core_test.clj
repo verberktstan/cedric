@@ -45,12 +45,12 @@
              (sut/combine rows))))
     (testing "returns a db-map with only items filtered by entity"
       (is (= {[:user 3] {:user 3 :attribute4 "value4"}}
-             (sut/combine {:entity-pred (sut/build-entity-pred {:ea? #{:user}})} rows)))
+             (sut/combine {:ea? #{:user}} rows)))
       (is (= {[:id 1] {:id 1 :attribute3 "value3"}}
-             (sut/combine {:entity-pred (sut/build-entity-pred {:ev? #{1}})} rows)))
+             (sut/combine {:ev? #{1}} rows)))
       (is (= {[:user 3] {:user 3 :attribute4 "value4"}
               [:id 0]   {:id 0 :attribute1 "value1" :attribute2 "value2"}}
-             (sut/combine {:entity-pred (sut/build-entity-pred {:e? #{[:user 3] [:id 0]}})} rows))))
+             (sut/combine {:e? #{[:user 3] [:id 0]}} rows))))
     (testing "doesn't return the destroyed items"
       (is (= {[:id 1]   {:id 1 :attribute3 "value3"}
               [:user 3] {:user 3 :attribute4 "value4"}}

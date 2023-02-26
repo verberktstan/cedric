@@ -19,10 +19,13 @@
         (conj rows [entity (first entity) (second entity) :destroy!]) 
         {::item item}))
     ;; TODO - Fix this combine predicate
-    (let [db                      (c/combine rows)
-          entity                  (if-let [entity (find item entity-attribute)]
-                                    entity
-                                    (c/generate-entity props db))
+    (let [found-entity            (find item entity-attribute)
+          db                      (c/combine
+                                    (if found-entity
+                                      {:e? #{found-entity}}
+                                      {:ea? #{entity-attribute}})
+                                    rows)
+          entity                  (or found-entity (c/generate-entity props db)) 
           [removed added overlap] (data/diff
                                     (get db entity)
                                     (merge item (c/entity->map entity)))
@@ -43,7 +46,7 @@
   (query [this props]
     (if (= :all props)
       (c/combine @mem)
-      (c/combine {:entity-pred (c/build-entity-pred props)} @mem)))
+      (c/combine props @mem)))
   (upsert! [this props item]
     (swap-item! mem upsert props item))
   (destroy! [this props item]
