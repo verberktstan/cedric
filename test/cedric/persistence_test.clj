@@ -10,10 +10,6 @@
            (cedric.persistence.mem Mem)
            (java.util Date)))
 
-(defn- write-rows! [filename rows]
-  (with-open [writer (io/writer filename :append true)]
-    (csv/write-csv writer (map (partial map pr-str) rows) :separator \;)))
-
 (defn- prepare-csv-file! [& [rows]]
   (let [dir      "/tmp/"
         time     (.toString (.toInstant (Date. )))
@@ -22,7 +18,7 @@
     (sh "rm" filename)
     (sh "touch" filename)
     (when rows
-      (write-rows! filename rows))
+      (#'cedric.persistence.csv/write-rows! filename rows))
     filename))
 
 ;; Test all implementations, only the constructor is different

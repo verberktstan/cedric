@@ -18,7 +18,6 @@
       (with-meta
         (conj rows [entity (first entity) (second entity) :destroy!]) 
         {::item item}))
-    ;; TODO - Fix this combine predicate
     (let [found-entity            (find item entity-attribute)
           db                      (c/combine
                                     (if found-entity

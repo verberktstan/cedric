@@ -13,7 +13,6 @@
       (doall
         (csv/read-csv reader :separator \;)))))
 
-;; TODO - DRY this, check persistence-test ns
 (defn- write-rows! [filename rows]
   (with-open [writer (io/writer filename :append true)]
     (csv/write-csv writer (map (partial map pr-str) rows) :separator \;)))
