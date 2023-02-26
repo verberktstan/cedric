@@ -1,6 +1,6 @@
 (ns cedric.persistence.csv
   (:require [cedric.core :as c]
-            [cedric.persistence :refer [Persistence]]
+            [cedric.persistence :refer [prepare-upsert Persistence]]
             [clojure.data :as data]
             [clojure.data.csv :as csv]
             [clojure.edn :as edn]
@@ -23,23 +23,10 @@
   (if destroy?
     (let [entity (find item entity-attribute)]
       (write-rows! filename [[entity (first entity) (second entity) :destroy!]]))
-    ;; TODO - DRY this overlap with mem implementation
-    (let [found-entity            (find item entity-attribute)
-          db                      (c/combine
-                                    (if found-entity
-                                      {:e? #{found-entity}}
-                                      {:ea? #{entity-attribute}})
-                                    (read-rows filename))
-          entity                  (or found-entity
-                                      (c/generate-entity props db))
-          [removed added overlap] (data/diff
-                                    (get db entity)
-                                    (merge item (c/entity->map entity)))
-          added-rows              (c/->rows props (c/entity->map added entity))
-          removed-props           (assoc props :deleted? true)
-          removed-rows            (c/->rows removed-props (c/entity->map removed entity))]
-      (write-rows! filename (concat removed-rows added-rows))
-      (merge overlap added))))
+    (let [upsert-props (assoc props :get-rows #(read-rows filename))
+          data         (prepare-upsert upsert-props item)]
+      (write-rows! filename (concat (:removed-rows data) (:added-rows data)))
+      (merge (:overlap data) (:added data)))))
 
 (defrecord Csv [filename]
   Persistence
