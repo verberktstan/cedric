@@ -1,5 +1,6 @@
 (ns cedric.core-test
   (:require [cedric.core :as sut]
+            [cedric.eav-map :as eav-map]
             [clojure.test :refer [deftest is testing]]))
 
 (deftest ->rows-test
@@ -15,20 +16,12 @@
     (testing "returns nil when entity can't be found" 
       (is (nil? (->rows {:entity-attribute :unknown}))))))
 
-(deftest entity->map-test
-  (is (= {:id 0} (sut/entity->map [:id 0])))
-  (is (= {:a :b :id 0} (sut/entity->map {:a :b} [:id 0]))))
-
-(deftest ->map-test
-  (is (= {::sut/destroyed-entity [:id 0]}
-         (-> (sut/->map {::sut/entity [:id 0] ::sut/attribute :a ::sut/value "v" ::sut/delete-or-destroy :destroy!}) meta))))
-
 (deftest merge-items-test
   (is (= {[:id 0] {:attribute1 "value1"}}
          (#'sut/merge-items {[:id 0] {:attribute1 "value1"}}
                             (with-meta
                               {[:id 1] {:attribute2 "value2"}}
-                              {::sut/destroyed-entity [:id 1]}))))
+                              {::eav-map/destroyed-entity [:id 1]}))))
   (is (= {[:id 0] {:id 0 :attribute1 "value1"}}
          (#'sut/merge-items {[:id 0] {:id 0}} {[:id 0] {:attribute1 "value1"}})))
   (is (= nil (#'sut/merge-items nil nil))))

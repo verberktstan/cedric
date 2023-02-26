@@ -31,7 +31,6 @@
 (defrecord Csv [filename]
   Persistence
   (query [this props]
-    ;; TODO - DRY the shared code with mem implementation
     (if (= :all props)
       (c/combine (read-rows filename))
       (c/combine props (read-rows filename))))

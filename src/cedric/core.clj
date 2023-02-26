@@ -1,18 +1,12 @@
 (ns cedric.core
-  (:require [clojure.data :as data]))
+  (:require [cedric.eav-map :as eav-map]
+            [clojure.data :as data]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; CEDRIC - Companion for Event DRIven datapersistence in Clojure
 ;; Store associatve items (maps, vectors, records) as rows in a EAV database.
 ;; Backends implemented as in-memory db, (TODO - csv, edn and SQLite)
 ;; Upsert (create, update & delete), Read & Destroy functionality
-
-(def ^:private zip-eav (partial zipmap [::entity ::attribute ::value ::delete-or-destroy]))
-
-(defn- ->eav [entity delete]
-  (comp zip-eav (juxt (constantly entity) key val (constantly delete))))
-
-(def ^:private ->row (juxt ::entity ::attribute ::value ::delete-or-destroy))
 
 (defn ->rows
   "Returns EAV-rows for the item to be saved. I'ts entity is based of the
@@ -22,32 +16,18 @@
                         (when find-entity (find-entity item)))]
     (let [delete (when deleted? :delete!)]
       (->> (dissoc item entity-attribute)
-           (map (->eav entity delete))
-           (map ->row)))))
+           (map (eav-map/make entity delete))
+           (map eav-map/->row)))))
 
-(defn entity->map
-  "Returns a map with the entity as part of it.
-  `(entity->map {:a :b} [:id 0]) => {:a :b :id 0}`"
-  ([entity] (entity->map nil entity))
-  ([m entity]
-   (into (or m {}) [entity])))
-
-;; TODO - Refactor into multiple namespaces; row / item / delete / destroy
-(defn ->map [{::keys [entity attribute value delete-or-destroy]}]
-  (let [av-map {attribute value}]
-    (case delete-or-destroy
-      :destroy! (with-meta {} {::destroyed-entity entity})
-      :delete!  {entity (with-meta av-map {::deleted-attribute attribute})}
-      {entity (entity->map av-map entity)})))
-
+;; TODO - Refactor this into its own item ns
 (defn- merge-item [map-a map-b]
-  (let [{::keys [deleted-attribute]} (meta map-b)]
+  (let [{::eav-map/keys [deleted-attribute]} (meta map-b)]
     (cond-> map-a
       deleted-attribute       (dissoc deleted-attribute)
       (not deleted-attribute) (merge map-b))))
 
 (defn- merge-items [& [item-a item-b]]
-  (let [{::keys [destroyed-entity]} (meta item-b)]
+  (let [{::eav-map/keys [destroyed-entity]} (meta item-b)]
     (cond-> (merge-with merge-item item-a item-b)
       destroyed-entity (dissoc destroyed-entity))))
 
@@ -70,9 +50,9 @@
    (let [entity-pred (or (build-entity-pred props) identity)]
      (transduce
        (comp
-         (map zip-eav)
-         (filter (comp entity-pred ::entity))
-         (map ->map))
+         (map eav-map/zip)
+         (filter (comp entity-pred ::eav-map/entity))
+         (map eav-map/->map))
        merge-items
        {}
        rows))))

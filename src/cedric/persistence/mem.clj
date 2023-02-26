@@ -1,12 +1,13 @@
 (ns cedric.persistence.mem
   (:require [cedric.core :as c]
             [cedric.persistence :refer [prepare-upsert Persistence]]
+            [cedric.entity :as entity]
             [clojure.data :as data]))
 
 (defn- items-with-entities [db]
   (reduce-kv
     (fn [m entity item]
-      (assoc m entity (merge item (c/entity->map entity))))
+      (assoc m entity (merge item (entity/->map entity))))
     nil
     db))
 
