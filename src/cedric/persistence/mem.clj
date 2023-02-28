@@ -23,7 +23,7 @@
           data         (prepare-upsert upsert-props item)]
       (with-meta
         (as-> rows r
-          (reduce conj r (:removed-rows data))
+          (reduce conj r (:deleted-rows data))
           (reduce conj r (:added-rows data)))
         {::item (merge-with merge (:overlap data) (:added data))}))))
 

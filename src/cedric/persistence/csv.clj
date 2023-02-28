@@ -1,10 +1,10 @@
 (ns cedric.persistence.csv
-  (:require [cedric.core :as c]
-            [cedric.persistence :refer [prepare-upsert Persistence]]
-            [clojure.data :as data]
-            [clojure.data.csv :as csv]
-            [clojure.edn :as edn]
-            [clojure.java.io :as io]))
+  (:require
+   [cedric.core :as c]
+   [cedric.persistence :refer [Persistence prepare-upsert]]
+   [clojure.data.csv :as csv]
+   [clojure.edn :as edn]
+   [clojure.java.io :as io]))
 
 (defn- read-rows [filename]
   (with-open [reader (io/reader filename)]
@@ -25,7 +25,7 @@
       (write-rows! filename [[entity (first entity) (second entity) :destroy!]]))
     (let [upsert-props (assoc props :get-rows #(read-rows filename))
           data         (prepare-upsert upsert-props item)]
-      (write-rows! filename (concat (:removed-rows data) (:added-rows data)))
+      (write-rows! filename (concat (:deleted-rows data) (:added-rows data)))
       (merge (:overlap data) (:added data)))))
 
 (defrecord Csv [filename]

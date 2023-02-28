@@ -12,12 +12,15 @@
         entity                  (or found-entity (c/generate-entity props db))
         complete-item           (merge item (entity/->map entity))
         [removed added overlap] (data/diff (get db entity) complete-item)
-        removed-props           (assoc props :deleted? true)]
-    {:removed      removed
+        updated                 (when added (comp added key))
+        deleted                 (cond->> removed
+                                  added (into {} (remove (comp added key))))
+        deleted-props           (assoc props :deleted? true)]
+    {:deleted      deleted
      :added        added
      :overlap      overlap
      :added-rows   (c/->rows props (entity/->map added entity))
-     :removed-rows (c/->rows removed-props (entity/->map removed entity))}))
+     :deleted-rows (c/->rows deleted-props (entity/->map deleted entity))}))
 
 ;; TODO - Add CSV implementation of Persistence
 ;; TODO - Add EDN implementation of Persistence
