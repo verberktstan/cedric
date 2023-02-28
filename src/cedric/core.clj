@@ -31,31 +31,32 @@
     (cond-> (merge-with merge-item item-a item-b)
       destroyed-entity (dissoc destroyed-entity))))
 
-(defn- build-entity-pred
-  "Returns a function that checks the ea? and ev? predicates for it's input.
-  Presumes that v is a vector of 2 elements, the first being the entity attribute,
-  the second being the entity value."
+(defn- entity-filter
+  "Returns a transducer."
   [{:keys [ea? ev? e?]}]
-  (when (or ea? ev? e?)
-    (fn entity-pred [v]
-      (every?
-        #(% v)
-        (keep identity [(when ea? (comp ea? first))
-                        (when ev? (comp ev? second))
-                        e?])))))
+  (filter
+    (if (or ea? ev? e?)
+      (fn entity-pred [{::eav-map/keys [entity]}]
+        (every?
+          (fn [predicate] (predicate entity))
+          (keep
+            identity
+            [e?
+             (when ea? (comp ea? first))
+             (when ev? (comp ev? second))])))
+      identity)))
 
 (defn combine
   ([row] (combine nil row))
   ([props rows]
-   (let [entity-pred (or (build-entity-pred props) identity)]
-     (transduce
-       (comp
-         (map eav-map/zip)
-         (filter (comp entity-pred ::eav-map/entity))
-         (map eav-map/->map))
-       merge-items
-       {}
-       rows))))
+   (transduce
+     (comp
+       (map eav-map/zip)
+       (entity-filter props)
+       (map eav-map/->map))
+     merge-items
+     {}
+     rows)))
 
 (defn- take-next [entity-attribute db]
   (comp
