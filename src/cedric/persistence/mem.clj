@@ -14,4 +14,6 @@
   Persistence
   (create! [_ props items]
     (-> (apply swap! mem create props items)
-        :created)))
+        :created))
+  (query [_ props]
+    (c/merge-rows props (:rows @mem))))
