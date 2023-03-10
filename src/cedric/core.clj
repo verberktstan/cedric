@@ -14,19 +14,27 @@
                (dissoc item entity-attribute))))]
     (mapcat ->rows items)))
 
-(defn merge-rows [rows]
-  (letfn [(row->eav [row]
-            (zipmap [::entity ::attribute ::value] row))
-          (eav->map [{::keys [entity attribute value]}]
-            {entity (into {attribute value} [entity])})]
-    (transduce
-     (comp (map row->eav) (map eav->map))
-     (partial merge-with merge)
-     rows)))
+(defn merge-rows
+  ([rows] (merge-rows nil rows))
+  ([{:keys [entity? entity-attr? entity-val?]
+     :or {entity? identity entity-attr? identity entity-val? identity}} rows]
+   (letfn [(row->eav [row]
+             (zipmap [::entity ::attribute ::value] row))
+           (eav->map [{::keys [entity attribute value]}]
+             {entity (into {attribute value} [entity])})]
+     (transduce
+      (comp (map row->eav)
+            (filter (comp entity? ::entity))
+            (filter (comp entity-attr? first ::entity))
+            (filter (comp entity-val? second ::entity))
+            (map eav->map))
+      (partial merge-with merge)
+      rows))))
 
 (defn create [rows entity-attribute & items]
-  (let [db (merge-rows rows)
-        next-entities (->> (range)
+  (when (seq items)
+    (let [db (merge-rows {:entity-attr? #{entity-attribute}} rows)
+          next-entities (->> (range)
                            (map (juxt (constantly entity-attribute) identity))
                            (remove (or db {})))]
-    (map #(into %1 [%2]) items next-entities)))
+      (map #(into %1 [%2]) items next-entities))))

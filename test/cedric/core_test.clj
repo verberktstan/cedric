@@ -21,7 +21,16 @@
       (is (= {[:a 1] {:a 1 :b 2}}
              (sut/merge-rows rows-a)))
       (is (= {[:a 1] {:a 1 :b 2 :c 3}}
-             (sut/merge-rows rows-b))))))
+             (sut/merge-rows rows-b))))
+    (let [rows-c (concat rows-b [[[:user/id 0] :user/name "Abraham"]
+                                 [[:user/id 1] :user/name "Bobby"]])]
+      (testing "filters by entity on predicate :entity?"
+        (is (= {[:user/id 0] {:user/id 0 :user/name "Abraham"}}
+               (sut/merge-rows {:entity? (comp #{[:user/id 0]})} rows-c))))
+      (testing "filters by entity on predicate :entity-attr?"
+        (is (= {[:user/id 0] {:user/id 0 :user/name "Abraham"}
+                [:user/id 1] {:user/id 1 :user/name "Bobby"}}
+               (sut/merge-rows {:entity-attr? (comp #{"user"} namespace)} rows-c)))))))
 
 (deftest create-test
   (testing "returns the newly created items (with entity)"
