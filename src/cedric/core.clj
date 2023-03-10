@@ -20,6 +20,13 @@
           (eav->map [{::keys [entity attribute value]}]
             {entity (into {attribute value} [entity])})]
     (transduce
-      (comp (map row->eav) (map eav->map))
-      (partial merge-with merge)
-      rows)))
+     (comp (map row->eav) (map eav->map))
+     (partial merge-with merge)
+     rows)))
+
+(defn create [rows entity-attribute & items]
+  (let [db (merge-rows rows)
+        next-entities (->> (range)
+                           (map (juxt (constantly entity-attribute) identity))
+                           (remove (or db {})))]
+    (map #(into %1 [%2]) items next-entities)))

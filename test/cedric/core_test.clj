@@ -22,3 +22,8 @@
              (sut/merge-rows rows-a)))
       (is (= {[:a 1] {:a 1 :b 2 :c 3}}
              (sut/merge-rows rows-b))))))
+
+(deftest create-test
+  (testing "returns the newly created items (with entity)"
+    (is (= [{:a 0 :b 1} {:a 2 :b 3}]
+           (sut/create [[[:a 1] :b 2]] :a {:b 1} {:b 3})))))
