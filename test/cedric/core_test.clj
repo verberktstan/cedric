@@ -13,3 +13,12 @@
       (let [msg #"Assert failed: entity"]
         (is (thrown-with-msg? Error msg (sut/items->rows :c item)))
         (is (thrown-with-msg? Error msg (sut/items->rows "a" item)))))))
+
+(deftest merge-rows-test
+  (let [rows-a [[[:a 1] :b 2]]
+        rows-b (concat rows-a [[[:a 1] :c 3]])]
+    (testing "returns the items for the rows"
+      (is (= {[:a 1] {:a 1 :b 2}}
+             (sut/merge-rows rows-a)))
+      (is (= {[:a 1] {:a 1 :b 2 :c 3}}
+             (sut/merge-rows rows-b))))))

@@ -13,3 +13,13 @@
                (juxt (constantly entity) key val)
                (dissoc item entity-attribute))))]
     (mapcat ->rows items)))
+
+(defn merge-rows [rows]
+  (letfn [(row->eav [row]
+            (zipmap [::entity ::attribute ::value] row))
+          (eav->map [{::keys [entity attribute value]}]
+            {entity (into {attribute value} [entity])})]
+    (transduce
+      (comp (map row->eav) (map eav->map))
+      (partial merge-with merge)
+      rows)))
