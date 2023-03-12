@@ -8,11 +8,12 @@
     (testing "returns rows for items"
       (is (= [[[:a 1] :b 2]] (sut/items->rows :a item)))
       (is (= [[[:a 1] :b 2] [[:a 2] :c 3]]
-             (sut/items->rows :a item {:a 2 :c 3}))))
+             (sut/items->rows :a item {:a 2 :c 3})))
+      ;; TODO - Put this in another test
+      (is (= [[[:a 1] nil nil :destroyed]]  (sut/destroyed-items->rows :a item))))
     (testing "throws an error when entity can't be found"
-      (let [msg #"Assert failed: entity"]
-        (is (thrown-with-msg? Error msg (sut/items->rows :c item)))
-        (is (thrown-with-msg? Error msg (sut/items->rows "a" item)))))))
+      (is (thrown? AssertionError (sut/items->rows :c item)))
+      (is (thrown? AssertionError (sut/items->rows "a" item))))))
 
 (deftest merge-rows-test
   (let [rows-a [[[:a 1] :b 2]]
@@ -36,3 +37,9 @@
   (testing "returns the newly created items (with entity)"
     (is (= [{:a 0 :b 1} {:a 2 :b 3}]
            (sut/create [[[:a 1] :b 2]] :a {:b 1} {:b 3})))))
+
+(deftest destroy-test
+  (testing "returns the destroyed items"
+    (let [items (sut/destroy [[[:a 0] :b 1]] :a 0)]
+      (is (= [[:a 0]] items))
+      (is (-> items first meta ::sut/destroyed-entity)))))
