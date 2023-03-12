@@ -4,16 +4,16 @@
 
 (defn- create [mem {:keys [entity-attribute]} & items]
   (assert (keyword? entity-attribute))
-  (let [created (apply c/create (:rows mem) entity-attribute items)]
+  (let [created (apply c/create (::rows mem) entity-attribute items)]
     (-> mem
-        (update :rows concat (apply c/items->rows entity-attribute created))
-        (assoc :created created))))
+        (update ::rows concat (apply c/items->rows entity-attribute created))
+        (assoc ::created created))))
 
 ;; Assumes mem is an atom.
 (defrecord Mem [mem]
   Persistence
   (create! [_ props items]
     (-> (apply swap! mem create props items)
-        :created))
+        ::created))
   (query [_ props]
-    (c/merge-rows props (:rows @mem))))
+    (vals (c/merge-rows props (::rows @mem)))))
