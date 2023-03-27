@@ -3,17 +3,20 @@
    [cedric.core :as sut]
    [clojure.test :refer [deftest is testing]]))
 
+(def item {:a 1 :b 2})
+
 (deftest items->rows-test
-  (let [item {:a 1 :b 2}]
-    (testing "returns rows for items"
-      (is (= [[[:a 1] :b 2]] (sut/items->rows :a item)))
-      (is (= [[[:a 1] :b 2] [[:a 2] :c 3]]
-             (sut/items->rows :a item {:a 2 :c 3})))
-      ;; TODO - Put this in another test
-      (is (= [[[:a 1] nil nil :destroyed]]  (sut/destroyed-items->rows :a item))))
-    (testing "throws an error when entity can't be found"
-      (is (thrown? AssertionError (sut/items->rows :c item)))
-      (is (thrown? AssertionError (sut/items->rows "a" item))))))
+  (testing "returns rows for items"
+    (is (= [[[:a 1] :b 2]] (sut/items->rows :a item)))
+    (is (= [[[:a 1] :b 2] [[:a 2] :c 3]]
+           (sut/items->rows :a item {:a 2 :c 3}))))
+  (testing "throws an error when entity can't be found"
+    (is (thrown? AssertionError (sut/items->rows :c item)))
+    (is (thrown? AssertionError (sut/items->rows "a" item)))))
+
+(deftest destroyed-items->rows-test
+  (testing "returns rows for destroyed items"
+    (is (= [[[:a 1] nil nil :destroyed]]  (sut/destroyed-items->rows :a item)))))
 
 (deftest merge-rows-test
   (let [rows-a [[[:a 1] :b 2]]

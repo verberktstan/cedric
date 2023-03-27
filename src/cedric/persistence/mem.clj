@@ -2,15 +2,18 @@
   (:require [cedric.core :as c]
             [cedric.persistence :refer [Persistence]]))
 
+(defn- assert-items [entity-attribute items]
+  (assert
+   (every? identity (map (partial c/find-entity entity-attribute) items))))
+
 (defn- create [mem {:keys [entity-attribute]} & items]
-  (assert (keyword? entity-attribute)) ;; TODO: DRY this!
   (let [created (apply c/create (::rows mem) entity-attribute items)]
+    (assert-items entity-attribute created) 
     (-> mem
         (update ::rows concat (apply c/items->rows entity-attribute created))
         (assoc ::created created))))
 
 (defn- destroy [{::keys [rows] :as mem} {:keys [entity-attribute]} & entity-vals]
-  (assert (keyword? entity-attribute)) ;; TODO: DRY this!
   (let [db (c/merge-rows {:entity-attr? #{entity-attribute}
                           :entity-val? (set entity-vals)} rows)]
     (-> mem

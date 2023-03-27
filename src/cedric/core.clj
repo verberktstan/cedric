@@ -7,21 +7,29 @@
 
 (def prune (comp seq (partial keep identity)))
 
-(defn- ->row [entity]
-  (juxt (constantly entity) key val))
+(defn find-entity
+  "Finds entity from the item, and checks if it is a valid map-entry. Assumes
+  item is a map and entity-attribute is a key that's present in map item."
+  [entity-attribute item]
+  {:post [(map-entry? %)]}
+  (find item entity-attribute))
 
-(defn destroyed-items->rows [entity-attribute & items]
-  (letfn [(->rows [item]
-            (let [entity (find item entity-attribute)]
-              (assert entity) ;; TODO - DRY this!
-              [[entity nil nil :destroyed]]))]
-    (mapcat ->rows items)))
+(defn destroyed-items->rows
+  "Returns rows for items to be destroyed."
+  [entity-attribute & items]
+  (letfn [(rowify [item]
+            [[(find-entity entity-attribute item) nil nil :destroyed]])]
+    (mapcat rowify items)))
+
+(defn- rowify "Returns a function that returns a row for a map-entry."
+  [entity]
+  (juxt (constantly entity) key val))
 
 (defn items->rows [entity-attribute & items]
   (letfn [(->rows [item]
-            (let [entity (find item entity-attribute)]
-              (assert entity) ;; TODO - DRY this!
-              (map (->row entity) (dissoc item entity-attribute))))]
+            (map
+             (rowify (find-entity entity-attribute item))
+             (dissoc item entity-attribute)))]
     (mapcat ->rows items)))
 
 (defn- merge-db-item [db-item {::keys [destroyed] :as item}]
