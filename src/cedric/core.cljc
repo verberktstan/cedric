@@ -25,37 +25,53 @@
              (dissoc item entity-attribute)))]
     (mapcat ->rows items)))
 
-(defn- tx-after? [{:keys [tx?]}]
+(defn- tx-after?
+  "Returns a predicate function, that checks if ::tx is greater than supplied :tx?"
+  [{:keys [tx?]}]
   (if tx?
     (comp (partial < tx?) ::tx)
     (constantly false)))
 
+(defn- row->eavt
+  "Returns a eavt map containing the entity, attribute, value and transaction
+  for a given row."
+  [row]
+  (zipmap [::entity ::attribute ::value ::tx] row))
+
+(defn- eav->map
+  "Retuns a map with the item keyed by it's entity."
+  [{::keys [entity attribute value]}]
+  {entity
+   (cond-> {}
+     attribute (assoc attribute value)
+     :always (into [entity]))})
+
 (defn merge-rows
+  "Returns a map with all items based off the supplied rows, keyed by their
+  respective entity."
   ([rows] (merge-rows nil rows))
   ([{:keys [entity? entity-attr? entity-val?]
      :or {entity? identity entity-attr? identity entity-val? identity}
      :as props} rows]
-   (letfn [(row->eavt [row]
-             (zipmap [::entity ::attribute ::value ::tx] row))
-           (eav->map [{::keys [entity attribute value]}]
-             {entity
-              (cond-> {}
-                attribute (assoc attribute value)
-                :always (into [entity]))})]
-     (transduce
-      (comp (map row->eavt)
-            (remove (tx-after? props))
-            (filter (comp entity? ::entity))
-            (filter (comp entity-attr? first ::entity)) ;; This relies on the fact that the entity is a vector of [entity-attr entity-val] (much like a map-entry)
-            (filter (comp entity-val? second ::entity))
-            (map eav->map))
-      (partial merge-with merge)
-      rows))))
+   (transduce
+    (comp (map row->eavt)
+          (remove (tx-after? props))
+          (filter (comp entity? ::entity))
+          ;; This relies on the fact that the entity is a vector of
+          ;; [entity-attr entity-val] (much like a map-entry)
+          (filter (comp entity-attr? first ::entity))
+          (filter (comp entity-val? second ::entity))
+          (map eav->map))
+    (partial merge-with merge)
+    rows)))
 
-(defn create [rows {:keys [entity-attribute]} & items]
+(defn create
+  "Returns the items with a new entity-value associated with entity-attribute."
+  [rows {:keys [entity-attribute]} & items]
   (assert (every? #(-> % (get entity-attribute) not) items))
   (assert (seq items))
   (let [db (merge-rows {:entity-attr? #{entity-attribute}} rows)
+        ;; Generate a lazy seq of the next available entities.
         next-entities (->> (range)
                            (map (juxt (constantly entity-attribute) identity))
                            (remove (or db {})))]
