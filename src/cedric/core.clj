@@ -52,11 +52,11 @@
       (partial merge-with merge)
       rows))))
 
-(defn create [rows {:keys [entity-attribute #_tx]} & items]
+(defn create [rows {:keys [entity-attribute]} & items]
   (assert (every? #(-> % (get entity-attribute) not) items))
-  (when (seq items)
-    (let [db (merge-rows {:entity-attr? #{entity-attribute}} rows)
-          next-entities (->> (range)
-                             (map (juxt (constantly entity-attribute) identity))
-                             (remove (or db {})))]
-      (map (fn [item entity] (into item [entity])) items next-entities))))
+  (assert (seq items))
+  (let [db (merge-rows {:entity-attr? #{entity-attribute}} rows)
+        next-entities (->> (range)
+                           (map (juxt (constantly entity-attribute) identity))
+                           (remove (or db {})))]
+    (map (fn [item entity] (into item [entity])) items next-entities)))
