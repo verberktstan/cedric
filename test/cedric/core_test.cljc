@@ -6,7 +6,7 @@
 (def item {:a 1 :b 2})
 
 (deftest rowify-test
-  (let [tx (System/currentTimeMillis)
+  (let [tx 999
         props {:entity-attribute :a :tx tx}]
     (testing "returns rows for items"
       (is (= [[[:a 1] :b 2 tx]] (sut/rowify props item)))
@@ -48,5 +48,5 @@
            (sut/create
              [[[:a 1] :b 2]]
              {:entity-attribute :a
-              :tx (System/currentTimeMillis)}
+              :tx 999}
              {:b 1} {:b 3})))))
