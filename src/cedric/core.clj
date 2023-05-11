@@ -25,19 +25,26 @@
              (dissoc item entity-attribute)))]
     (mapcat ->rows items)))
 
+(defn- tx-after? [{:keys [tx?]}]
+  (if tx?
+    (comp (partial < tx?) ::tx)
+    (constantly false)))
+
 (defn merge-rows
   ([rows] (merge-rows nil rows))
   ([{:keys [entity? entity-attr? entity-val?]
-     :or {entity? identity entity-attr? identity entity-val? identity}} rows]
-   (letfn [(row->eav [row]
-             (zipmap [::entity ::attribute ::value] row))
+     :or {entity? identity entity-attr? identity entity-val? identity}
+     :as props} rows]
+   (letfn [(row->eavt [row]
+             (zipmap [::entity ::attribute ::value ::tx] row))
            (eav->map [{::keys [entity attribute value]}]
              {entity
               (cond-> {}
                 attribute (assoc attribute value)
                 :always (into [entity]))})]
      (transduce
-      (comp (map row->eav)
+      (comp (map row->eavt)
+            (remove (tx-after? props))
             (filter (comp entity? ::entity))
             (filter (comp entity-attr? first ::entity)) ;; This relies on the fact that the entity is a vector of [entity-attr entity-val] (much like a map-entry)
             (filter (comp entity-val? second ::entity))
@@ -45,11 +52,11 @@
       (partial merge-with merge)
       rows))))
 
-(defn create [rows {:keys [entity-attribute tx]} & items]
+(defn create [rows {:keys [entity-attribute #_tx]} & items]
   (assert (every? #(-> % (get entity-attribute) not) items))
   (when (seq items)
     (let [db (merge-rows {:entity-attr? #{entity-attribute}} rows)
           next-entities (->> (range)
                              (map (juxt (constantly entity-attribute) identity))
                              (remove (or db {})))]
-      (map #(into %1 [%2]) items next-entities))))
+      (map (fn [item entity] (into item [entity])) items next-entities))))
