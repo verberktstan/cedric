@@ -14,7 +14,7 @@
     (is (thrown? AssertionError (sut/items->rows :c item)))
     (is (thrown? AssertionError (sut/items->rows "a" item)))))
 
-(deftest destroyed-items->rows-test
+#_(deftest destroyed-items->rows-test
   (testing "returns rows for destroyed items"
     (is (= [[[:a 1] nil nil :destroyed]]  (sut/destroyed-items->rows :a item)))))
 
@@ -41,7 +41,7 @@
     (is (= [{:a 0 :b 1} {:a 2 :b 3}]
            (sut/create [[[:a 1] :b 2]] :a {:b 1} {:b 3})))))
 
-(deftest destroy-test
+#_(deftest destroy-test
   (testing "returns the destroyed items"
     (let [items (sut/destroy [[[:a 0] :b 1]] :a 0)]
       (is (= [[:a 0]] items))

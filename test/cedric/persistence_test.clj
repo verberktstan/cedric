@@ -22,7 +22,7 @@
       (is (= items (sut/query db {:entity-attr? #{:a}})))
       (is (nil? (sut/query db {:entity-attr? #{:z}}))))))
 
-(deftest destroy!-test
+#_(deftest destroy!-test
   (let [db (make-mem)
         item0 {:a 0 :b 1}
         item1 {:a 1 :b 2}]

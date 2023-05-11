@@ -14,7 +14,7 @@
   {:post [(map-entry? %)]}
   (find item entity-attribute))
 
-(defn destroyed-items->rows
+#_(defn destroyed-items->rows
   "Returns rows for items to be destroyed."
   [entity-attribute & items]
   (letfn [(rowify [item]
@@ -32,7 +32,7 @@
              (dissoc item entity-attribute)))]
     (mapcat ->rows items)))
 
-(defn- merge-db-item [db-item {::keys [destroyed] :as item}]
+#_(defn- merge-db-item [db-item {::keys [destroyed] :as item}]
   (when-not destroyed (merge db-item item)))
 
 (defn merge-rows
@@ -53,7 +53,7 @@
             (filter (comp entity-attr? first ::entity))
             (filter (comp entity-val? second ::entity))
             (map eav->map))
-      (partial merge-with merge-db-item)
+      (partial merge-with merge #_-db-item)
       rows))))
 
 (defn create [rows entity-attribute & items]
@@ -64,7 +64,7 @@
                            (remove (or db {})))]
       (map #(into %1 [%2]) items next-entities))))
 
-(defn destroy [rows entity-attribute & entity-vals]
+#_(defn destroy [rows entity-attribute & entity-vals]
   (when (seq entity-vals)
     (let [entities (set (map vector (repeat entity-attribute) (seq entity-vals)))
           db (merge-rows {:entity? entities} rows)]
