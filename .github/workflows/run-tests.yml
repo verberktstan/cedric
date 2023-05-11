@@ -1,0 +1,26 @@
+name: run-tests
+on: [push]
+jobs:
+  run-cljs-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+      - run: npm install -g shadow-cljs
+      - run: npx shadow-cljs compile test
+      - run: node out/node-tests.js
+      
+  run-clj-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      - uses: DeLaGuardo/setup-clojure@10.3
+        with:
+          cli: 1.11.1.1273
+      - run: clojure -X:test
