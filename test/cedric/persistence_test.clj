@@ -20,4 +20,5 @@
     (testing "returns selected items"
       (is (= [item0] (sut/query db {:entity? #{[:a 0]}})))
       (is (= items (sut/query db {:entity-attr? #{:a}})))
+      (is (= [item1] (sut/query db {:entity-val? #{1}})))
       (is (nil? (sut/query db {:entity-attr? #{:z}}))))))

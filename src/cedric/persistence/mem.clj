@@ -3,6 +3,7 @@
             [cedric.persistence :refer [Persistence]]))
 
 (defn- assert-items [entity-attribute items]
+  (assert (seq items))
   (assert
    (every? identity (map (partial c/find-entity entity-attribute) items))))
 
