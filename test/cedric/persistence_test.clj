@@ -21,13 +21,3 @@
       (is (= [item0] (sut/query db {:entity? #{[:a 0]}})))
       (is (= items (sut/query db {:entity-attr? #{:a}})))
       (is (nil? (sut/query db {:entity-attr? #{:z}}))))))
-
-#_(deftest destroy!-test
-  (let [db (make-mem)
-        item0 {:a 0 :b 1}
-        item1 {:a 1 :b 2}]
-    (testing "returns the destroyed item(s)"
-      (sut/create! db {:entity-attribute :a} [{:b 1} {:b 2}])
-      (is (= [item0] (sut/destroy! db {:entity-attribute :a} #{0})))
-      #_(is (= nil @(:mem db)))
-      (is (= [item1] (sut/query db :all))))))
