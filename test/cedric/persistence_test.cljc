@@ -1,10 +1,10 @@
 (ns cedric.persistence-test
   (:require
    [cedric.persistence :as sut]
-   [cedric.persistence.mem]
+   #?(:clj [cedric.persistence.mem]
+      :cljs [cedric.persistence.mem :refer [Mem]])
    [clojure.test :refer [deftest is testing]])
-  (:import
-   (cedric.persistence.mem Mem)))
+  #?(:clj (:import (cedric.persistence.mem Mem))))
 
 (def make-mem #(Mem. (atom nil)))
 

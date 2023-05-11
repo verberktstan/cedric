@@ -13,8 +13,12 @@
       (is (= [[[:a 1] :b 2 tx] [[:a 2] :c 3 tx]]
              (sut/rowify props item {:a 2 :c 3}))))
     (testing "throws an error when entity can't be found"
-      (is (thrown? AssertionError (sut/rowify (assoc props :entity-attribute :c) item)))
-      (is (thrown? AssertionError (sut/rowify (assoc props :entity-attribute "a") item))))))
+      (is (thrown?
+           #?(:clj AssertionError :cljs js/Error)
+           (sut/rowify (assoc props :entity-attribute :c) item)))
+      (is (thrown?
+           #?(:clj AssertionError :cljs js/Error)
+           (sut/rowify (assoc props :entity-attribute "a") item))))))
 
 (deftest merge-rows-test
   (let [rows-a [[[:a 1] :b 2]]
