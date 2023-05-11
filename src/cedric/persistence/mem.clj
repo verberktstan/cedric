@@ -6,11 +6,11 @@
   (assert
    (every? identity (map (partial c/find-entity entity-attribute) items))))
 
-(defn- create [mem {:keys [entity-attribute]} & items]
+(defn- create [mem {:keys [entity-attribute] :as props} & items]
   (let [created (apply c/create (::rows mem) entity-attribute items)]
-    (assert-items entity-attribute created) 
+    (assert-items entity-attribute created)
     (-> mem
-        (update ::rows concat (apply c/items->rows entity-attribute created))
+        (update ::rows concat (apply c/rowify props created))
         (assoc ::created created))))
 
 ;; Assumes mem is an atom.

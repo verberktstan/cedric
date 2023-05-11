@@ -14,14 +14,14 @@
   {:post [(map-entry? %)]}
   (find item entity-attribute))
 
-(defn- rowify "Returns a function that returns a row for a map-entry."
+(defn- rowify* "Returns a function that returns a row for a map-entry."
   [entity]
   (juxt (constantly entity) key val))
 
-(defn items->rows [entity-attribute & items]
+(defn rowify [{:keys [entity-attribute]} & items]
   (letfn [(->rows [item]
             (map
-             (rowify (find-entity entity-attribute item))
+             (rowify* (find-entity entity-attribute item))
              (dissoc item entity-attribute)))]
     (mapcat ->rows items)))
 
