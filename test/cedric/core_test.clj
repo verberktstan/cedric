@@ -5,15 +5,16 @@
 
 (def item {:a 1 :b 2})
 
-(deftest rowify
-  (testing "returns rows for items"
-    (let [props {:entity-attribute :a}]
-      (is (= [[[:a 1] :b 2]] (sut/rowify props item)))
-      (is (= [[[:a 1] :b 2] [[:a 2] :c 3]]
-             (sut/rowify props item {:a 2 :c 3})))))
-  (testing "throws an error when entity can't be found"
-    (is (thrown? AssertionError (sut/rowify {:entity-attribute :c} item)))
-    (is (thrown? AssertionError (sut/rowify {:entity-attribute "a"} item)))))
+(deftest rowify-test
+  (let [tx (System/currentTimeMillis)
+        props {:entity-attribute :a :tx tx}]
+    (testing "returns rows for items"
+      (is (= [[[:a 1] :b 2 tx]] (sut/rowify props item)))
+      (is (= [[[:a 1] :b 2 tx] [[:a 2] :c 3 tx]]
+             (sut/rowify props item {:a 2 :c 3}))))
+    (testing "throws an error when entity can't be found"
+      (is (thrown? AssertionError (sut/rowify (assoc props :entity-attribute :c) item)))
+      (is (thrown? AssertionError (sut/rowify (assoc props :entity-attribute "a") item))))))
 
 (deftest merge-rows-test
   (let [rows-a [[[:a 1] :b 2]]
@@ -36,4 +37,8 @@
 (deftest create-test
   (testing "returns the newly created items (with entity)"
     (is (= [{:a 0 :b 1} {:a 2 :b 3}]
-           (sut/create [[[:a 1] :b 2]] {:entity-attribute :a} {:b 1} {:b 3})))))
+           (sut/create
+             [[[:a 1] :b 2]]
+             {:entity-attribute :a
+              :tx (System/currentTimeMillis)}
+             {:b 1} {:b 3})))))

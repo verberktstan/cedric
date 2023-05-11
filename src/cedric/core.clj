@@ -15,13 +15,15 @@
   (find item entity-attribute))
 
 (defn- rowify* "Returns a function that returns a row for a map-entry."
-  [entity]
-  (juxt (constantly entity) key val))
+  [entity tx]
+  (assert entity)
+  (assert tx)
+  (juxt (constantly entity) key val (constantly tx)))
 
-(defn rowify [{:keys [entity-attribute]} & items]
+(defn rowify [{:keys [entity-attribute tx]} & items]
   (letfn [(->rows [item]
             (map
-             (rowify* (find-entity entity-attribute item))
+             (rowify* (find-entity entity-attribute item) tx)
              (dissoc item entity-attribute)))]
     (mapcat ->rows items)))
 
@@ -45,7 +47,7 @@
       (partial merge-with merge)
       rows))))
 
-(defn create [rows {:keys [entity-attribute]} & items]
+(defn create [rows {:keys [entity-attribute tx]} & items]
   (assert (every? #(-> % (get entity-attribute) not) items))
   (when (seq items)
     (let [db (merge-rows {:entity-attr? #{entity-attribute}} rows)
