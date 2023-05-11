@@ -2,7 +2,7 @@ name: cljs-test-workflow
 run-name: ${{ github.actor }} is learning GitHub Actions
 on: [push]
 jobs:
-  check-bats-version:
+  run-cljs-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
