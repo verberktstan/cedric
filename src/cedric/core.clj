@@ -30,20 +30,19 @@
   ([{:keys [entity? entity-attr? entity-val?]
      :or {entity? identity entity-attr? identity entity-val? identity}} rows]
    (letfn [(row->eav [row]
-             (zipmap [::entity ::attribute ::value ::destroyed] row))
-           (eav->map [{::keys [entity attribute value destroyed]}]
+             (zipmap [::entity ::attribute ::value] row))
+           (eav->map [{::keys [entity attribute value]}]
              {entity
               (cond-> {}
                 attribute (assoc attribute value)
-                :always (into [entity])
-                destroyed (assoc ::destroyed entity))})]
+                :always (into [entity]))})]
      (transduce
       (comp (map row->eav)
             (filter (comp entity? ::entity))
             (filter (comp entity-attr? first ::entity))
             (filter (comp entity-val? second ::entity))
             (map eav->map))
-      (partial merge-with merge #_-db-item)
+      (partial merge-with merge)
       rows))))
 
 (defn create [rows entity-attribute & items]
