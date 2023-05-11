@@ -8,7 +8,7 @@
    (every? identity (map (partial c/find-entity entity-attribute) items))))
 
 (defn- create [mem {:keys [entity-attribute] :as props} & items]
-  (let [created (apply c/create (::rows mem) entity-attribute items)]
+  (let [created (apply c/create (::rows mem) props items)]
     (assert-items entity-attribute created)
     (-> mem
         (update ::rows concat (apply c/rowify props created))
