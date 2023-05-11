@@ -1,0 +1,108 @@
+- name: Setup Clojure
+  # You may pin to the exact commit or the version.
+  # uses: name: Example workflow
+
+on: [push]
+
+jobs:
+
+  clojure:
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # It is important to install java before installing clojure tools which needs java
+      # exclusions: babashka, clj-kondo and cljstyle
+      - name: Prepare java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '20'
+
+      - name: Install clojure tools
+        uses: DeLaGuardo/setup-clojure@10.3
+        with:
+          # Install just one or all simultaneously
+          # The value must indicate a particular version of the tool, or use 'latest'
+          # to always provision the latest version
+          cli: 1.10.1.693              # Clojure CLI based on tools.deps
+          #lein: 2.9.1                  # Leiningen
+          #boot: 2.8.3                  # Boot.clj
+          #bb: 0.7.8                    # Babashka
+          #clj-kondo: 2022.05.31        # Clj-kondo
+          #cljstyle: 0.15.0             # cljstyle
+          #cmd-exe-workaround: 'latest' # Replaces `clojure` with `deps.clj` on Windows
+          #zprint: 1.2.3                # zprint
+          
+      # Optional step:
+      - name: Cache clojure dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            #~/.m2/repository
+            ~/.gitlibs
+            ~/.deps.clj
+          # List all files containing dependencies:
+          key: cljdeps-${{ hashFiles('deps.edn', 'shadow-cljs.edn') }}
+          # key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
+          # key: cljdeps-${{ hashFiles('project.clj') }}
+          # key: cljdeps-${{ hashFiles('build.boot') }}
+          restore-keys: cljdeps-
+
+      - name: Execute clojure code
+        run: clojure -x:test
+        
+      #- name: Get leiningen version
+        #run: lein -v
+        
+      #- name: Get boot version
+        #run: boot -V
+
+      #- name: Get babashka version
+        #run: bb --version
+
+      #- name: Get clj-kondo version
+        #run: clj-kondo --version
+
+      #- name: Get cljstyle version
+        # cljstyle is not yet available for windows
+        #if: ${{ matrix.os != 'windows-latest' }}
+        #run: cljstyle version
+
+      #- name: Get zprint version
+        #run: zprint --version/setup-clojure@05cb4bfdf57855f122e75b71e45224775cdfc4a0
+  uses: DeLaGuardo/setup-clojure@9.5
+  with:
+    # The Leiningen version to make available on the path.
+    lein: # optional
+    # The boot-clj version to make available on the path.
+    boot: # optional
+    # [DEPRECATED] The tools deps version to make available on the path.
+    tools-deps: # optional
+    # Clojure CLI version to make available on the path.
+    cli: # optional
+    # [DEPRECATED] On Windows platform, it will replace official Clojure CLI with the `deps.clj` of its specific version, `latest` can be used.
+#Useful for running `clojure` command from `cmd.exe`.
+
+    cmd-exe-workaround: # optional
+    # Babashka version to install, `latest` can be used.
+    bb: # optional
+    # Clj-kondo version to install, `latest` can be used.
+    clj-kondo: # optional
+    # cljstyle version to install, `latest` can be used.
+    cljstyle: # optional
+    # zprint version to install, `latest` can be used.
+    zprint: # optional
+    # To fix rate limit errors, provide `secrets.GITHUB_TOKEN` value to this field. More info: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
+
+    github-token: # optional, default is ${{ github.token }}
+    # Set to `true` to fix problems realted to wrongly populated tool cache
+
+    invalidate-cache: # optional
