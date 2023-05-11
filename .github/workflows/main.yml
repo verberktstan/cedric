@@ -1,0 +1,9 @@
+- name: Clojure Documentation Action
+  # You may pin to the exact commit or the version.
+  # uses: aseemchopra25/clojure-autodoc@e6ecd9e0c75f1cf8d79eee069feec778058ab0f2
+  uses: aseemchopra25/clojure-autodoc@0.1
+  with:
+    # Path to Clojure Code Source
+    source-path: # optional, default is ./src
+    # Working Directory
+    working-directory: # optional, default is .
