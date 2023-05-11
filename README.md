@@ -11,4 +11,4 @@ Assumes you have clojure installed.
 Run cljs tests with node, compile test build with npm.
 Assumes you have node and npm installed.
 
-```npm install -g shadow-cljs && npx shadow-cljs compile test && node out/node-tests.js```
+```npm i shadow-cljs && npx shadow-cljs compile test && node out/node-tests.js```
