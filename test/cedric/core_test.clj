@@ -14,10 +14,6 @@
     (is (thrown? AssertionError (sut/items->rows :c item)))
     (is (thrown? AssertionError (sut/items->rows "a" item)))))
 
-(deftest destroyed-items->rows-test
-  (testing "returns rows for destroyed items"
-    (is (= [[[:a 1] nil nil :destroyed]]  (sut/destroyed-items->rows :a item)))))
-
 (deftest merge-rows-test
   (let [rows-a [[[:a 1] :b 2]]
         rows-b (concat rows-a [[[:a 1] :c 3]])]
@@ -40,9 +36,3 @@
   (testing "returns the newly created items (with entity)"
     (is (= [{:a 0 :b 1} {:a 2 :b 3}]
            (sut/create [[[:a 1] :b 2]] :a {:b 1} {:b 3})))))
-
-(deftest destroy-test
-  (testing "returns the destroyed items"
-    (let [items (sut/destroy [[[:a 0] :b 1]] :a 0)]
-      (is (= [[:a 0]] items))
-      (is (-> items first meta ::sut/destroyed-entity)))))
