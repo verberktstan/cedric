@@ -5,14 +5,16 @@
 
 (def item {:a 1 :b 2})
 
-(deftest items->rows-test
-  (testing "returns rows for items"
-    (is (= [[[:a 1] :b 2]] (sut/items->rows :a item)))
-    (is (= [[[:a 1] :b 2] [[:a 2] :c 3]]
-           (sut/items->rows :a item {:a 2 :c 3}))))
-  (testing "throws an error when entity can't be found"
-    (is (thrown? AssertionError (sut/items->rows :c item)))
-    (is (thrown? AssertionError (sut/items->rows "a" item)))))
+(deftest rowify-test
+  (let [tx (System/currentTimeMillis)
+        props {:entity-attribute :a :tx tx}]
+    (testing "returns rows for items"
+      (is (= [[[:a 1] :b 2 tx]] (sut/rowify props item)))
+      (is (= [[[:a 1] :b 2 tx] [[:a 2] :c 3 tx]]
+             (sut/rowify props item {:a 2 :c 3}))))
+    (testing "throws an error when entity can't be found"
+      (is (thrown? AssertionError (sut/rowify (assoc props :entity-attribute :c) item)))
+      (is (thrown? AssertionError (sut/rowify (assoc props :entity-attribute "a") item))))))
 
 (deftest merge-rows-test
   (let [rows-a [[[:a 1] :b 2]]
@@ -30,9 +32,21 @@
       (testing "filters by entity on predicate :entity-attr?"
         (is (= {[:user/id 0] {:user/id 0 :user/name "Abraham"}
                 [:user/id 1] {:user/id 1 :user/name "Bobby"}}
-               (sut/merge-rows {:entity-attr? (comp #{"user"} namespace)} rows-c)))))))
+               (sut/merge-rows {:entity-attr? (comp #{"user"} namespace)} rows-c))))))
+  (let [rows-c [[[:user/id 1] :user/name "Name One" 99]]
+        rows-d (concat rows-c [[[:user/id 2] :user/name "Name Two" 100]])]
+    (testing "doesn't return items with TX above the requested TX"
+      (is (= {[:user/id 1] {:user/id 1 :user/name "Name One"}
+              [:user/id 2] {:user/id 2 :user/name "Name Two"}}
+             (sut/merge-rows rows-d)))
+      (is (= {[:user/id 1] {:user/id 1 :user/name "Name One"}}
+             (sut/merge-rows {:tx? 99} rows-d))))))
 
 (deftest create-test
   (testing "returns the newly created items (with entity)"
     (is (= [{:a 0 :b 1} {:a 2 :b 3}]
-           (sut/create [[[:a 1] :b 2]] :a {:b 1} {:b 3})))))
+           (sut/create
+             [[[:a 1] :b 2]]
+             {:entity-attribute :a
+              :tx (System/currentTimeMillis)}
+             {:b 1} {:b 3})))))

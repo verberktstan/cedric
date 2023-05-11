@@ -5,8 +5,6 @@
 ;; Store associatve data (maps) as rows in a EAV database.
 ;; Backends implemented as in-memory db (TODO - csv, edn and SQLite implementations)
 
-(def prune (comp seq (partial keep identity)))
-
 (defn find-entity
   "Finds entity from the item, and checks if it is a valid map-entry. Assumes
   item is a map and entity-attribute is a key that's present in map item."
@@ -14,42 +12,51 @@
   {:post [(map-entry? %)]}
   (find item entity-attribute))
 
-(defn- rowify "Returns a function that returns a row for a map-entry."
-  [entity]
-  (juxt (constantly entity) key val))
+(defn- rowify* "Returns a function that returns a row for a map-entry."
+  [entity tx]
+  (assert entity)
+  (assert tx)
+  (juxt (constantly entity) key val (constantly tx)))
 
-(defn items->rows [entity-attribute & items]
+(defn rowify [{:keys [entity-attribute tx]} & items]
   (letfn [(->rows [item]
             (map
-             (rowify (find-entity entity-attribute item))
+             (rowify* (find-entity entity-attribute item) tx)
              (dissoc item entity-attribute)))]
     (mapcat ->rows items)))
+
+(defn- tx-after? [{:keys [tx?]}]
+  (if tx?
+    (comp (partial < tx?) ::tx)
+    (constantly false)))
 
 (defn merge-rows
   ([rows] (merge-rows nil rows))
   ([{:keys [entity? entity-attr? entity-val?]
-     :or {entity? identity entity-attr? identity entity-val? identity}} rows]
-   (letfn [(row->eav [row]
-             (zipmap [::entity ::attribute ::value ::destroyed] row))
-           (eav->map [{::keys [entity attribute value destroyed]}]
+     :or {entity? identity entity-attr? identity entity-val? identity}
+     :as props} rows]
+   (letfn [(row->eavt [row]
+             (zipmap [::entity ::attribute ::value ::tx] row))
+           (eav->map [{::keys [entity attribute value]}]
              {entity
               (cond-> {}
                 attribute (assoc attribute value)
-                :always (into [entity])
-                destroyed (assoc ::destroyed entity))})]
+                :always (into [entity]))})]
      (transduce
-      (comp (map row->eav)
+      (comp (map row->eavt)
+            (remove (tx-after? props))
             (filter (comp entity? ::entity))
-            (filter (comp entity-attr? first ::entity))
+            (filter (comp entity-attr? first ::entity)) ;; This relies on the fact that the entity is a vector of [entity-attr entity-val] (much like a map-entry)
             (filter (comp entity-val? second ::entity))
             (map eav->map))
-      (partial merge-with merge #_-db-item)
+      (partial merge-with merge)
       rows))))
 
-(defn create [rows entity-attribute & items]
-  (when (seq items)
-    (let [db (merge-rows {:entity-attr? #{entity-attribute}} rows)
-          next-entities (->> (range)
+(defn create [rows {:keys [entity-attribute]} & items]
+  (assert (every? #(-> % (get entity-attribute) not) items))
+  (assert (seq items))
+  (let [db (merge-rows {:entity-attr? #{entity-attribute}} rows)
+        next-entities (->> (range)
                            (map (juxt (constantly entity-attribute) identity))
                            (remove (or db {})))]
-      (map #(into %1 [%2]) items next-entities))))
+    (map (fn [item entity] (into item [entity])) items next-entities)))
