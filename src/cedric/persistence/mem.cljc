@@ -7,9 +7,12 @@
   (assert
    (every? identity (map (partial c/find-entity entity-attribute) items))))
 
-;; TODO - Make tx generation work in JS as well as Java!
+(defn- epoch-time[]
+  #?(:clj (System/currentTimeMillis)
+     :cljs (js/Date.now)))
+
 (defn- wrap-tx [props]
-  (assoc props :tx (System/currentTimeMillis)))
+  (assoc props :tx (epoch-time)))
 
 (defn- create [mem props & items]
   (let [{:keys [entity-attribute] :as props} (wrap-tx props)

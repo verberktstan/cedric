@@ -6,15 +6,19 @@
 (def item {:a 1 :b 2})
 
 (deftest rowify-test
-  (let [tx (System/currentTimeMillis)
+  (let [tx 999
         props {:entity-attribute :a :tx tx}]
     (testing "returns rows for items"
       (is (= [[[:a 1] :b 2 tx]] (sut/rowify props item)))
       (is (= [[[:a 1] :b 2 tx] [[:a 2] :c 3 tx]]
              (sut/rowify props item {:a 2 :c 3}))))
     (testing "throws an error when entity can't be found"
-      (is (thrown? AssertionError (sut/rowify (assoc props :entity-attribute :c) item)))
-      (is (thrown? AssertionError (sut/rowify (assoc props :entity-attribute "a") item))))))
+      (is (thrown?
+           #?(:clj AssertionError :cljs js/Error)
+           (sut/rowify (assoc props :entity-attribute :c) item)))
+      (is (thrown?
+           #?(:clj AssertionError :cljs js/Error)
+           (sut/rowify (assoc props :entity-attribute "a") item))))))
 
 (deftest merge-rows-test
   (let [rows-a [[[:a 1] :b 2]]
@@ -48,5 +52,5 @@
            (sut/create
              [[[:a 1] :b 2]]
              {:entity-attribute :a
-              :tx (System/currentTimeMillis)}
+              :tx 999}
              {:b 1} {:b 3})))))
