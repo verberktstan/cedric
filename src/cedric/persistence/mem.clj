@@ -7,6 +7,7 @@
   (assert
    (every? identity (map (partial c/find-entity entity-attribute) items))))
 
+;; TODO - Make tx generation work in JS as well as Java!
 (defn- wrap-tx [props]
   (assoc props :tx (System/currentTimeMillis)))
 
@@ -24,4 +25,4 @@
   (create! [_ props items]
     (-> (apply swap! mem create props items) ::created))
   (query [_ props]
-    (-> props (c/merge-rows (::rows @mem)) vals c/prune)))
+    (-> props (c/merge-rows (::rows @mem)) vals)))

@@ -5,8 +5,6 @@
 ;; Store associatve data (maps) as rows in a EAV database.
 ;; Backends implemented as in-memory db (TODO - csv, edn and SQLite implementations)
 
-(def prune (comp seq (partial keep identity)))
-
 (defn find-entity
   "Finds entity from the item, and checks if it is a valid map-entry. Assumes
   item is a map and entity-attribute is a key that's present in map item."
@@ -41,7 +39,7 @@
      (transduce
       (comp (map row->eav)
             (filter (comp entity? ::entity))
-            (filter (comp entity-attr? first ::entity))
+            (filter (comp entity-attr? first ::entity)) ;; This relies on the fact that the entity is a vector of [entity-attr entity-val] (much like a map-entry)
             (filter (comp entity-val? second ::entity))
             (map eav->map))
       (partial merge-with merge)
