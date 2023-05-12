@@ -8,10 +8,10 @@
 
 (def make-mem #(Mem. (atom nil)))
 
-(defn fill-db [db]
+(defn- fill-db [db]
   (sut/create! db {:entity-attribute :a} [{:b 1} {:b 2}]))
 
-(deftest create-and-query-test
+(deftest create!-and-query-test
   (let [db (make-mem)
         item0 {:a 0 :b 1}
         item1 {:a 1 :b 2}
@@ -30,3 +30,17 @@
         (is (= items (sut/query db {:entity-attr? #{:a}})))
         (is (= [item1] (sut/query db {:entity-val? #{1}})))
         (is (nil? (sut/query db {:entity-attr? #{:z}})))))))
+
+(deftest destroy!-test
+  (testing "destroy!"
+    (let [db (doto (make-mem) fill-db)]
+      (testing "returns the entities of the destroyed items"
+        (is (= #{[:a 0]} (sut/destroy! db {:entity-attribute :a} [{:a 0}]))))
+      (testing "marks the rows as destroyed"
+        (is (= [[[:a 0] :b 1 nil]
+                [[:a 1] :b 2 nil]
+                [[:a 0] :a 0 true]]
+               (map (partial take 4) (sut/rows db)))))
+      (testing "destroyed rows are not returned from a query"
+        (is (= [{:a 1 :b 2}]
+               (sut/query db nil)))))))

@@ -9,9 +9,10 @@
   (let [tx 999
         props {:entity-attribute :a :tx tx}]
     (testing "returns rows for items"
-      (is (= [[[:a 1] :b 2 tx]] (sut/rowify props item)))
-      (is (= [[[:a 1] :b 2 tx] [[:a 2] :c 3 tx]]
-             (sut/rowify props item {:a 2 :c 3}))))
+      (is (= [[[:a 1] :b 2 nil tx]] (sut/rowify props item)))
+      (is (= [[[:a 1] :b 2 nil tx] [[:a 2] :c 3 nil tx]]
+             (sut/rowify props item {:a 2 :c 3})))
+      (is (= [[[:a 1] :b 2 true tx]] (sut/rowify (assoc props :destroyed? true) item))))
     (testing "throws an error when entity can't be found"
       (is (thrown?
            #?(:clj AssertionError :cljs js/Error)
@@ -37,8 +38,8 @@
         (is (= {[:user/id 0] {:user/id 0 :user/name "Abraham"}
                 [:user/id 1] {:user/id 1 :user/name "Bobby"}}
                (sut/merge-rows {:entity-attr? (comp #{"user"} namespace)} rows-c))))))
-  (let [rows-c [[[:user/id 1] :user/name "Name One" 99]]
-        rows-d (concat rows-c [[[:user/id 2] :user/name "Name Two" 100]])]
+  (let [rows-c [[[:user/id 1] :user/name "Name One" nil 99]]
+        rows-d (concat rows-c [[[:user/id 2] :user/name "Name Two" nil 100]])]
     (testing "doesn't return items with TX above the requested TX"
       (is (= {[:user/id 1] {:user/id 1 :user/name "Name One"}
               [:user/id 2] {:user/id 2 :user/name "Name Two"}}

@@ -22,6 +22,16 @@
         (update ::rows concat (apply c/rowify props created))
         (assoc ::created created))))
 
+(defn- destroy [mem {:keys [entity-attribute] :as props} & items]
+  (let [items (map #(select-keys % #{entity-attribute}) items)
+        props (-> props wrap-tx (assoc :destroyed? true :keep-ea? true))
+        destroyed-entities (map (partial c/find-entity entity-attribute) items)
+        destroyed-rows (apply  c/rowify props items)]
+    (->
+     mem
+     (update ::rows concat destroyed-rows)
+     (assoc ::destroyed (set destroyed-entities)))))
+
 ;; Assumes mem is an atom.
 (defrecord Mem [mem]
   Persistence
@@ -30,4 +40,6 @@
   (rows [_]
     (::rows @mem))
   (query [_ props]
-    (-> props (c/merge-rows (::rows @mem)) vals)))
+    (seq (keep identity (-> props (c/merge-rows (::rows @mem)) vals))))
+  (destroy! [_ props items]
+    (-> (apply swap! mem destroy props items) ::destroyed)))

@@ -13,16 +13,18 @@
   (find item entity-attribute))
 
 (defn- rowify* "Returns a function that returns a row for a map-entry."
-  [entity tx]
+  [entity destroyed? tx]
   (assert entity)
   (assert tx)
-  (juxt (constantly entity) key val (constantly tx)))
+  (juxt (constantly entity) key val (constantly destroyed?) (constantly tx)))
 
-(defn rowify [{:keys [entity-attribute tx]} & items]
+(defn rowify [{:keys [entity-attribute tx keep-ea? destroyed?]} & items]
+  (assert tx)
   (letfn [(->rows [item]
             (map
-             (rowify* (find-entity entity-attribute item) tx)
-             (dissoc item entity-attribute)))]
+             (rowify* (find-entity entity-attribute item) destroyed? tx)
+             (cond-> item
+               (not keep-ea?) (dissoc entity-attribute))))]
     (mapcat ->rows items)))
 
 (defn- tx-after?
@@ -36,15 +38,20 @@
   "Returns a eavt map containing the entity, attribute, value and transaction
   for a given row."
   [row]
-  (zipmap [::entity ::attribute ::value ::tx] row))
+  (zipmap [::entity ::attribute ::value ::destroyed? ::tx] row))
 
 (defn- eav->map
   "Retuns a map with the item keyed by it's entity."
-  [{::keys [entity attribute value]}]
+  [{::keys [entity attribute value destroyed?]}]
   {entity
-   (cond-> {}
+   (cond-> (with-meta {} {::destroyed? destroyed?})
      attribute (assoc attribute value)
      :always (into [entity]))})
+
+(defn- merge-items
+  [item-a item-b]
+  (when-not (-> item-b meta ::destroyed?)
+    (merge item-a item-b)))
 
 (defn merge-rows
   "Returns a map with all items based off the supplied rows, keyed by their
@@ -62,7 +69,7 @@
           (filter (comp entity-attr? first ::entity))
           (filter (comp entity-val? second ::entity))
           (map eav->map))
-    (partial merge-with merge)
+    (partial merge-with merge-items)
     rows)))
 
 (defn create
