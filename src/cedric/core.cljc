@@ -19,7 +19,6 @@
   (juxt (constantly entity) key val (constantly destroyed?) (constantly tx)))
 
 (defn rowify [{:keys [entity-attribute tx keep-ea? destroyed?]} & items]
-  (assert tx)
   (letfn [(->rows [item]
             (map
              (rowify* (find-entity entity-attribute item) destroyed? tx)
