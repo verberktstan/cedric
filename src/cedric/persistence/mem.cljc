@@ -40,6 +40,6 @@
   (rows [_]
     (::rows @mem))
   (query [_ props]
-    (-> props (c/merge-rows (::rows @mem)) vals))
+    (seq (keep identity (-> props (c/merge-rows (::rows @mem)) vals))))
   (destroy! [_ props items]
     (-> (apply swap! mem destroy props items) ::destroyed)))

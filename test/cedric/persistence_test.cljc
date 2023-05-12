@@ -40,4 +40,7 @@
         (is (= [[[:a 0] :b 1 nil]
                 [[:a 1] :b 2 nil]
                 [[:a 0] :a 0 true]]
-               (map (partial take 4) (sut/rows db))))))))
+               (map (partial take 4) (sut/rows db)))))
+      (testing "destroyed rows are not returned from a query"
+        (is (= [{:a 1 :b 2}]
+               (sut/query db nil)))))))
