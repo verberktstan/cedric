@@ -8,6 +8,9 @@
 
 (def make-mem #(Mem. (atom nil)))
 
+(defn fill-db [db]
+  (sut/create! db {:entity-attribute :a} [{:b 1} {:b 2}]))
+
 (deftest create-and-query-test
   (let [db (make-mem)
         item0 {:a 0 :b 1}
@@ -15,7 +18,7 @@
         items [item0 item1]]
     (testing "create!"
       (testing "returns the newly created items (with entity)"
-        (is (= items (sut/create! db {:entity-attribute :a} [{:b 1} {:b 2}]))))
+        (is (= items (fill-db db))))
       (testing "persists all the data to the db rows"
         (is (= [[[:a 0] :b 1]
                 [[:a 1] :b 2]]
