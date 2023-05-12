@@ -13,16 +13,17 @@
   (find item entity-attribute))
 
 (defn- rowify* "Returns a function that returns a row for a map-entry."
-  [entity tx]
+  [entity destroyed? tx]
   (assert entity)
   (assert tx)
-  (juxt (constantly entity) key val (constantly tx)))
+  (juxt (constantly entity) key val (constantly destroyed?) (constantly tx)))
 
-(defn rowify [{:keys [entity-attribute tx]} & items]
+(defn rowify [{:keys [entity-attribute tx keep-ea? destroyed?]} & items]
   (letfn [(->rows [item]
             (map
-             (rowify* (find-entity entity-attribute item) tx)
-             (dissoc item entity-attribute)))]
+             (rowify* (find-entity entity-attribute item) destroyed? tx)
+             (cond-> item
+               (not keep-ea?) (dissoc entity-attribute))))]
     (mapcat ->rows items)))
 
 (defn- tx-after?

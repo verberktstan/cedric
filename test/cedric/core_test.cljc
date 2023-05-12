@@ -9,9 +9,10 @@
   (let [tx 999
         props {:entity-attribute :a :tx tx}]
     (testing "returns rows for items"
-      (is (= [[[:a 1] :b 2 tx]] (sut/rowify props item)))
-      (is (= [[[:a 1] :b 2 tx] [[:a 2] :c 3 tx]]
-             (sut/rowify props item {:a 2 :c 3}))))
+      (is (= [[[:a 1] :b 2 nil tx]] (sut/rowify props item)))
+      (is (= [[[:a 1] :b 2 nil tx] [[:a 2] :c 3 nil tx]]
+             (sut/rowify props item {:a 2 :c 3})))
+      (is (= [[[:a 1] :b 2 true tx]] (sut/rowify (assoc props :destroyed? true) item))))
     (testing "throws an error when entity can't be found"
       (is (thrown?
            #?(:clj AssertionError :cljs js/Error)
