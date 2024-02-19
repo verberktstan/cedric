@@ -1,5 +1,8 @@
 # cedric
 Cedric Event DRIven datapersistence Companion
+
+This moved into https://github.com/verberktstan/swark
+
 ## Usage
 
 Require the db and persistence namespaces:
